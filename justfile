@@ -1,7 +1,7 @@
 PYTHON_BINARY := "python3"
 VIRTUAL_ENV := "venv"
 VIRTUAL_BIN := VIRTUAL_ENV / "bin"
-PROJECT_NAME := "project_name"
+PROJECT_NAME := "pyfuelprices"
 TEST_DIR := "test"
 
 # Scans the project for security vulnerabilities

@@ -1,15 +1,13 @@
 <div align="center">
 
-# PROJECT_NAME_URL
+# pyfuelprices
 
 A one-liner description of your project goes here.
 
-[![Build Status](https://github.com/USERNAME/PROJECT_NAME_URL/workflows/build/badge.svg)](https://github.com/USERNAME/PROJECT_NAME_URL/actions)
-[![Coverage Status](https://coveralls.io/repos/github/USERNAME/PROJECT_NAME_URL/badge.svg?branch=main)](https://coveralls.io/github/USERNAME/PROJECT_NAME_URL?branch=main)
-[![PyPi](https://img.shields.io/pypi/v/PROJECT_NAME_URL)](https://pypi.org/project/PROJECT_NAME_URL)
-[![Licence](https://img.shields.io/github/license/USERNAME/PROJECT_NAME_URL)](LICENSE)
-
-<img src="https://raw.githubusercontent.com/justintime50/assets/main/src/python-template/showcase.png" alt="Showcase">
+[![Build Status](https://github.com/pantherale0/pyfuelprices/workflows/build/badge.svg)](https://github.com/pantherale0/pyfuelprices/actions)
+[![Coverage Status](https://coveralls.io/repos/github/pantherale0/pyfuelprices/badge.svg?branch=main)](https://coveralls.io/github/pantherale0/pyfuelprices?branch=main)
+[![PyPi](https://img.shields.io/pypi/v/pyfuelprices)](https://pypi.org/project/pyfuelprices)
+[![Licence](https://img.shields.io/github/license/pantherale0/pyfuelprices)](LICENSE)
 
 </div>
 
@@ -19,7 +17,7 @@ A longer paragraph description of your project goes here.
 
 ```bash
 # Install tool
-pip3 install project_name
+pip3 install pyfuelprices
 
 # Install locally
 just install
@@ -27,11 +25,7 @@ just install
 
 ## Usage
 
-Usage instructions go here.
-
-```bash
-venv/bin/python my_script.py
-```
+TODO
 
 ## Development
 
