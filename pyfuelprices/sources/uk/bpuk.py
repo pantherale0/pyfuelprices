@@ -1,9 +1,9 @@
 """BP UK dataprovider."""
 
-from .asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
-class BpUKSource(AsdaUKSource):
-    """BP UK uses the same parses as Asda."""
+class BpUKSource(CMAParser):
+    """BP UK uses the CMA parser."""
 
     _url = "https://www.bp.com/en_gb/united-kingdom/home/fuelprices/fuel_prices_data.json"
     provider_name = "bpuk"

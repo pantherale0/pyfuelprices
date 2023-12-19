@@ -7,12 +7,12 @@ from datetime import datetime
 from pyfuelprices.fuel_locations import FuelLocation
 from pyfuelprices.sources import UpdateFailedError
 
-from .asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
 _LOGGER = logging.getLogger(__name__)
 
-class ShellUKSource(AsdaUKSource):
-    """Shell UK uses the same parses as Asda although requires custom request handlers."""
+class ShellUKSource(CMAParser):
+    """Shell UK uses the CMA parser although requires custom request handlers."""
 
     _url = "https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json?sp=r&st=2023-11-21T05%3A20%3A29Z&se=2024-11-21T13%3A20%3A29Z&spr=https&sv=2022-11-02&sr=b&sig=%2F4eArYrrj1qKpD6Kn3a8on7Fm3jqTdBAKeH04gsuNho%3D"
     provider_name = "shelluk"

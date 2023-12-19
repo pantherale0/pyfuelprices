@@ -1,9 +1,9 @@
 """Rontec UK dataprovider."""
 
-from .asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
-class RontecUKSource(AsdaUKSource):
-    """Rontec UK uses the same parses as Asda."""
+class RontecUKSource(CMAParser):
+    """Rontec UK uses the same parses as CMA."""
 
     _url = "https://www.rontec-servicestations.co.uk/fuel-prices/data/fuel_prices_data.json"
     provider_name = "rontec"

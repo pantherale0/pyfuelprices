@@ -1,9 +1,9 @@
 """Applegreen Stores dataprovider."""
 
-from .asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
-class ApplegreenUKSource(AsdaUKSource):
-    """Applegreen UK uses the same parses as Asda."""
+class ApplegreenUKSource(CMAParser):
+    """Applegreen UK uses the CMA parser."""
 
     _url = "https://applegreenstores.com/fuel-prices/data.json"
     provider_name = "Applegreen"

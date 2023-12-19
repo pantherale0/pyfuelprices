@@ -1,6 +1,7 @@
 """Data sources and translators for pyfuelprices."""
 
 import logging
+import json
 
 from datetime import timedelta, datetime
 
@@ -15,7 +16,7 @@ class Source:
 
     _url: str = ""
     _method: str = "GET"
-    _request_body: dict = ""
+    _request_body: dict | None = None
     _headers: dict = {}
     _location_ids: list[int] = []
     _raw_data = None
@@ -38,15 +39,23 @@ class Source:
         """Update hooks for the data source."""
         if datetime.now() > self.next_update:
             _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
-            async with self._client_session.request(
-                url=self._url,
-                method=self._method,
-                json=self._request_body
-            ) as response:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self._timeout),
+                headers=self._headers
+            ) as session:
+                response = await session.request(
+                    method=self._method,
+                    url=self._url,
+                    json=self._request_body
+                )
                 _LOGGER.debug("Update request completed for %s with status %s",
-                              self.provider_name, response.status)
+                            self.provider_name, response.status)
                 if response.status == 200:
                     self.next_update += self.update_interval
+                    if "application/json" not in response.content_type:
+                        return self.parse_response(
+                            response=json.loads(await response.text())
+                        )
                     return self.parse_response(
                         response=await response.json()
                     )

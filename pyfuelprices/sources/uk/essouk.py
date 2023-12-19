@@ -1,9 +1,9 @@
 """Esso UK module."""
 
-from pyfuelprices.sources.asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
-class EssoUKSource(AsdaUKSource):
-    """The main source."""
+class EssoUKSource(CMAParser):
+    """Esso UK uses the same parser as CMA."""
 
     _url = "https://fuelprices.esso.co.uk/latestdata.json"
     provider_name = "essouk"

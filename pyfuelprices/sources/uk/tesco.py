@@ -1,9 +1,9 @@
 """Tesco UK dataprovider."""
 
-from .asda import AsdaUKSource
+from pyfuelprices.sources.uk import CMAParser
 
-class TescoUKSource(AsdaUKSource):
-    """Tesco UK uses the same parses as Asda."""
+class TescoUKSource(CMAParser):
+    """Tesco UK uses the CMA parser."""
 
     _url = "https://www.tesco.com/fuel_prices/fuel_prices_data.json"
     provider_name = "tesco"

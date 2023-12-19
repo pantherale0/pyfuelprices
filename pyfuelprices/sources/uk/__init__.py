@@ -1,18 +1,11 @@
-"""Asda UK module."""
+"""UK Fuel Sources and parsers."""
 
-import logging
-
-from pyfuelprices.fuel_locations import FuelLocation, Fuel
 from pyfuelprices.sources import Source
+from pyfuelprices.fuel import Fuel
+from pyfuelprices.fuel_locations import FuelLocation
 
-_LOGGER = logging.getLogger(__name__)
-
-class AsdaUKSource(Source):
-    """The main source."""
-
-    _url = "https://storelocator.asda.com/fuel_prices_data.json"
-    provider_name = "asda"
-    _timeout = 10
+class CMAParser(Source):
+    """This parser is specific for the scheme by the CMA."""
 
     def parse_response(self, response) -> list[FuelLocation]:
         """Converts the esso data into fuel price mapping."""
