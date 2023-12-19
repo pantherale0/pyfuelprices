@@ -47,12 +47,12 @@ class FuelPrices:
         coros = [update_iteration(s) for s in self.configured_sources]
         await asyncio.gather(*coros)
 
-    def get_fuel_location(self, id: str) -> FuelLocation:
+    def get_fuel_location(self, site_id: str) -> FuelLocation:
         """Retrieve a single fuel location."""
         for loc in self.fuel_locations:
-            if loc.id == id:
+            if loc.id == site_id:
                 return loc
-        raise ValueError(f"No site has been discovered for {id}.")
+        raise ValueError(f"No site has been discovered for {site_id}.")
 
     def find_fuel_locations_from_point(self, point, radius: float) -> list[str]:
         """Retrieve all fuel locations from a single point."""
