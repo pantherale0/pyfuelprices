@@ -3,7 +3,7 @@
 import logging
 import asyncio
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from geopy import distance
 
 from pyfuelprices.sources import Source, UpdateFailedError
@@ -22,27 +22,28 @@ class FuelPrices:
     async def update(self):
         """Update helper to update all configured sources."""
         async def update_iteration(src: Source):
-            try:
-                updated = await src.update()
-                for loc in updated:
-                    if loc.id in self._discovered_sites:
-                        self.get_fuel_location(loc.id).update(loc)
-                    else:
-                        self.fuel_locations.append(loc)
-                        self._discovered_sites.append(loc.id)
-            except TimeoutError:
-                _LOGGER.warning("Timeout updating data for %s, will attempt again in 30 mins",
-                                src.provider_name)
-                src.next_update += timedelta(minutes=30)
-            except UpdateFailedError as err:
-                _LOGGER.warning("Error updating data for %s, response code %s: %s",
-                                src.provider_name,
-                                err.status,
-                                err.response)
-                src.next_update += timedelta(minutes=60)
-            except Exception as err:
-                _LOGGER.error("%s", err)
-                src.next_update += timedelta(minutes=60)
+            if datetime.now() > src.next_update:
+                try:
+                    updated = await src.update()
+                    for loc in updated:
+                        if loc.id in self._discovered_sites:
+                            self.get_fuel_location(loc.id).update(loc)
+                        else:
+                            self.fuel_locations.append(loc)
+                            self._discovered_sites.append(loc.id)
+                except TimeoutError:
+                    _LOGGER.warning("Timeout updating data for %s, will attempt again in 30 mins",
+                                    src.provider_name)
+                    src.next_update += timedelta(minutes=30)
+                except UpdateFailedError as err:
+                    _LOGGER.warning("Error updating data for %s, response code %s: %s",
+                                    src.provider_name,
+                                    err.status,
+                                    err.response)
+                    src.next_update += timedelta(minutes=60)
+                except Exception as err:
+                    _LOGGER.error("%s", err)
+                    src.next_update += timedelta(minutes=60)
 
         coros = [update_iteration(s) for s in self.configured_sources]
         await asyncio.gather(*coros)

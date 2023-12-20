@@ -37,33 +37,32 @@ class Source:
 
     async def update(self) -> list[FuelLocation]:
         """Update hooks for the data source."""
-        if datetime.now() > self.next_update:
-            _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=self._timeout),
-                headers=self._headers
-            ) as session:
-                response = await session.request(
-                    method=self._method,
-                    url=self._url,
-                    json=self._request_body
-                )
-                _LOGGER.debug("Update request completed for %s with status %s",
-                            self.provider_name, response.status)
-                if response.status == 200:
-                    self.next_update += self.update_interval
-                    if "application/json" not in response.content_type:
-                        return self.parse_response(
-                            response=json.loads(await response.text())
-                        )
+        _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=self._timeout),
+            headers=self._headers
+        ) as session:
+            response = await session.request(
+                method=self._method,
+                url=self._url,
+                json=self._request_body
+            )
+            _LOGGER.debug("Update request completed for %s with status %s",
+                        self.provider_name, response.status)
+            if response.status == 200:
+                self.next_update += self.update_interval
+                if "application/json" not in response.content_type:
                     return self.parse_response(
-                        response=await response.json()
+                        response=json.loads(await response.text())
                     )
-                raise UpdateFailedError(
-                    status=response.status,
-                    response=await response.text(),
-                    headers=response.headers
+                return self.parse_response(
+                    response=await response.json()
                 )
+            raise UpdateFailedError(
+                status=response.status,
+                response=await response.text(),
+                headers=response.headers
+            )
 
     def parse_response(self, response) -> list[FuelLocation]:
         """Parses the response from the update hook."""
