@@ -16,8 +16,6 @@ with open('pyfuelprices/_version.py', 'r', encoding='utf8') as version_file:
 REQUIREMENTS = [
     # Add your list of production dependencies here, eg:
     # 'requests == 2.*',
-    'geopy == 2.8.*',
-    'aiohttp == 2.*'
 ]
 
 DEV_REQUIREMENTS = [
@@ -30,7 +28,6 @@ DEV_REQUIREMENTS = [
     'pytest == 7.*',
     'pytest-cov == 4.*',
     'twine == 4.*',
-    'geopy == 2.8.*'
 ]
 
 setuptools.setup(
