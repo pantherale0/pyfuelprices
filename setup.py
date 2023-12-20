@@ -16,6 +16,8 @@ with open('pyfuelprices/_version.py', 'r', encoding='utf8') as version_file:
 REQUIREMENTS = [
     # Add your list of production dependencies here, eg:
     # 'requests == 2.*',
+    'geopy == 2.8.*',
+    'aiohttp == 2.*'
 ]
 
 DEV_REQUIREMENTS = [
@@ -28,25 +30,21 @@ DEV_REQUIREMENTS = [
     'pytest == 7.*',
     'pytest-cov == 4.*',
     'twine == 4.*',
+    'geopy == 2.8.*'
 ]
 
 setuptools.setup(
     name='pyfuelprices',
     version=version,
-    description='Your project description here',
+    description='A generic library to collect fuel prices of fuel stations around the world!',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='http://github.com/pantherale0/pyfuelprices',
     author='pantherale0',
     license='MIT',
-    packages=setuptools.find_packages(
-        exclude=[
-            'examples',
-            'test',
-        ]
-    ),
+    packages=setuptools.find_packages(),
     package_data={
-        'project_name': [
+        'pyfuelprices': [
             'py.typed',
         ]
     },

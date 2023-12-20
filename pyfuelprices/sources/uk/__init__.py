@@ -11,13 +11,18 @@ class CMAParser(Source):
         """Converts the esso data into fuel price mapping."""
         fuel_locations = []
         for location_raw in response["stations"]:
-            location = FuelLocation()
-            location.id = location_raw["site_id"]
-            location.address = location_raw["address"]
-            location.brand = location_raw["brand"]
-            location.lat = location_raw["location"]["latitude"]
-            location.long = location_raw["location"]["longitude"]
-            location.available_fuels = self.parse_fuels(location_raw["prices"])
+            location = FuelLocation.create(
+                site_id=location_raw["site_id"],
+                name="",
+                address=location_raw["address"],
+                brand=location_raw["brand"],
+                lat=location_raw["location"]["latitude"],
+                long=location_raw["location"]["longitude"],
+                available_fuels=self.parse_fuels(location_raw["prices"]),
+                postal_code=location_raw["postcode"]
+            )
+            # There is no name for fuel stations for this data so build one instead
+            location.name = f"{location.brand} {location.postal_code}"
             fuel_locations.append(location)
         return fuel_locations
 

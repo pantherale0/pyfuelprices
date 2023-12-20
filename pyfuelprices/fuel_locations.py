@@ -15,6 +15,24 @@ class FuelLocation:
     brand = ""
     available_fuels: list[Fuel] = []
     last_updated: datetime | None = None
+    postal_code: str | None = None
+
+    def __dict__(self) -> dict:
+        """Convert the object to a dict."""
+        fuels = {}
+        for fuel in self.available_fuels:
+            fuels[fuel.fuel_type] = fuel.cost
+        return {
+            "id": self.id,
+            "name": self.name,
+            "address": self.address,
+            "postal_code": self.postal_code,
+            "latitude": self.lat,
+            "longitude": self.long,
+            "brand": self.brand,
+            "available_fuels": fuels,
+            "last_updated": self.last_updated,
+        }
 
     def update(self, updated: 'FuelLocation'):
         """Update the object."""
@@ -23,6 +41,8 @@ class FuelLocation:
         self.lat = updated.lat
         self.long = updated.long
         self.brand = updated.brand
+        self.last_updated = updated.last_updated
+        self.postal_code = updated.postal_code
         for fuel in updated.available_fuels:
             try:
                 self.get_fuel(fuel.fuel_type).update(fuel.fuel_type, fuel.cost, fuel.props)
@@ -38,18 +58,25 @@ class FuelLocation:
 
     @classmethod
     def create(cls,
+               site_id: str,
                name: str,
                address: str,
                lat: float,
                long: float,
                brand: str,
-               available_fuels
+               available_fuels,
+               last_updated: datetime = datetime.now(),
+               postal_code: str | None = None
         ) -> 'FuelLocation':
         """Create an instance of fuel location."""
         location = cls()
+        location.id = site_id
         location.address = address
         location.name = name
         location.lat = lat
         location.long = long
         location.brand = brand
         location.available_fuels = available_fuels
+        location.last_updated = last_updated
+        location.postal_code = postal_code
+        return location

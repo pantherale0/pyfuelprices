@@ -15,11 +15,13 @@ async def main():
         radius=5.0
     ):
         loc = data.get_fuel_location(location_id)
-        _LOGGER.info("Found location %s", loc.address)
-        for fuel in loc.available_fuels:
-            _LOGGER.info("Fuel %s: %s",
-                         fuel.fuel_type,
-                         fuel.cost)
+        _LOGGER.info("Found location: %s", loc.__dict__())
+
+    _LOGGER.info("Fuels test: %s", data.find_fuel_from_point(
+        point=(52.570419, 1.115850),
+        radius=25.0,
+        fuel_type="B7"
+    ))
 
     await asyncio.sleep(15)
 

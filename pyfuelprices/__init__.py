@@ -56,7 +56,7 @@ class FuelPrices:
 
     def find_fuel_locations_from_point(self, point, radius: float) -> list[str]:
         """Retrieve all fuel locations from a single point."""
-        _LOGGER.debug("Searching for fuel locations at point %s with a %s mile radius.",
+        _LOGGER.debug("Searching for all fuel locations at point %s with a %s mile radius.",
                       point,
                       radius)
         location_ids = []
@@ -64,6 +64,19 @@ class FuelPrices:
             if distance.distance(point, (fuel_location.lat, fuel_location.long)).miles < radius:
                 location_ids.append(fuel_location.id)
         return location_ids
+
+    def find_fuel_from_point(self, point, radius: float, fuel_type: str) -> dict[str, float]:
+        """Retrieve the fuel cost from a single point."""
+        _LOGGER.debug("Searching for fuel %s", fuel_type)
+        locations = self.find_fuel_locations_from_point(point, radius)
+        fuels = {}
+        for loc_id in locations:
+            loc = self.get_fuel_location(loc_id)
+            for fuel in loc.available_fuels:
+                if fuel.fuel_type == fuel_type:
+                    fuels[loc.name] = fuel.cost
+
+        return sorted(fuels.items(), key=lambda item: item[1])
 
     @classmethod
     def create(cls,
