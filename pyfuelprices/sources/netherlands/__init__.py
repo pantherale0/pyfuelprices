@@ -121,9 +121,9 @@ class DirectLeaseTankServiceParser(Source):
             loc.name = raw_loc.get("name", None)
             if (loc.name is None and loc.brand is not None):
                 loc.name = raw_loc["brand"] + " " + raw_loc["city"]
-            if (loc.name is None):
+            if loc.name is None:
                 loc.name = f"Unknown site {loc.dl_stn_id}"
-            if (loc.brand is None):
+            if loc.brand is None:
                 loc.brand = "Unknown"
             loc.address = "Unknown"
             loc.postal_code = "Unknown"
