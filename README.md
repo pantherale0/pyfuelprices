@@ -25,6 +25,14 @@ just install
 
 TODO
 
+## Datasources
+
+Sources used to provide data for this module include:
+
+- BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
+- NL: DirectLease TankService (https://directlease.nl/tankservice/)
+- UK: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
+
 ## Development
 
 ```bash

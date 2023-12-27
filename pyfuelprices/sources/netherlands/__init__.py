@@ -1,4 +1,4 @@
-"""UK Fuel Sources and parsers."""
+"""Belgium and Netherlands Fuel Sources and parsers."""
 
 import re
 import logging
@@ -17,7 +17,7 @@ from .const import DIRECTLEASE_API_PLACES, DIRECTLEASE_API_STATION
 
 _LOGGER = logging.getLogger(__name__)
 
-def _hash(hsh):
+def _hash(hsh: str):
     encoded_string = hsh.encode("utf-8")
     hash_object = hashlib.sha1(encoded_string)
     return hash_object.hexdigest()
