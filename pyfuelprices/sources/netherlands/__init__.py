@@ -45,8 +45,8 @@ class DirectLeaseFuelLocation(FuelLocation):
 
     async def dynamic_build_fuels(self):
         """Dynamic requests to build fuels."""
-        # if (len(self.available_fuels) != 0 and self.next_update > datetime.now()):
-        #     return None
+        if (len(self.available_fuels) != 0 and self.next_update > datetime.now()):
+            return None
         request_url = DIRECTLEASE_API_STATION.format(station_id=self.dl_stn_id)
 
         session = aiohttp.ClientSession()
@@ -129,6 +129,7 @@ class DirectLeaseTankServiceParser(Source):
             loc.address = "Unknown"
             loc.postal_code = "Unknown"
             loc.last_updated = datetime.now()
+            loc.next_update = datetime.now()-timedelta(seconds=1) # force next update
             parsed.append(loc)
         return parsed
 
