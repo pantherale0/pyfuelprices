@@ -61,23 +61,41 @@ class DirectLeaseFuelLocation(FuelLocation):
                         self.dl_stn_id)
         if response.status == 200:
             response = await response.json()
+            # opportunity to build extra location data too
+            self.postal_code = response.get("postalCode", "Unknown")
+            self.address = response.get("address", "Unknown")
+            self.brand = response.get("brand", "Unknown")
+            self.name = response.get("name", "Unknown")
             for fuel_raw in response["fuels"]:
                 _LOGGER.debug("Parsing fuel %s", fuel_raw)
-                f_type = re.search(r'.*?\((.*?)\)', fuel_raw["name"])
+                f_type = re.search(r"\(([^)]+)\)", fuel_raw["name"])
+                if f_type is None:
+                    f_type = fuel_raw["name"].upper()
+                else:
+                    f_type = f_type.group(1).upper()
                 try:
-                    self.get_fuel(f_type).update(
-                        fuel_type=f_type,
-                        cost=fuel_raw["price"]/1000,
-                        props={}
-                    )
-                except ValueError:
-                    self.available_fuels.append(
-                        Fuel(
+                    fuel_cost = fuel_raw.get("price", None)
+                    if fuel_cost is not None:
+                        self.get_fuel(f_type).update(
                             fuel_type=f_type,
                             cost=fuel_raw["price"]/1000,
                             props={}
                         )
-                    )
+                    else:
+                        self.get_fuel(f_type).update(
+                            fuel_type=f_type,
+                            cost="Unavailable",
+                            props={}
+                        )
+                except ValueError:
+                    if fuel_raw.get("price", None) is not None:
+                        self.available_fuels.append(
+                            Fuel(
+                                fuel_type=f_type,
+                                cost=fuel_raw["price"]/1000,
+                                props={}
+                            )
+                        )
 
         await session.close()
         self.next_update = datetime.now()+self.update_interval
@@ -103,11 +121,12 @@ class DirectLeaseTankServiceParser(Source):
             loc.name = raw_loc.get("name", None)
             if (loc.name is None and loc.brand is not None):
                 loc.name = raw_loc["brand"] + " " + raw_loc["city"]
-            else:
+            if (loc.name is None):
                 loc.name = f"Unknown site {loc.dl_stn_id}"
-                loc.brand = "Not available"
-            loc.address = "Not available"
-            loc.postal_code = "Not available"
+            if (loc.brand is None):
+                loc.brand = "Unknown"
+            loc.address = "Unknown"
+            loc.postal_code = "Unknown"
             loc.last_updated = datetime.now()
             parsed.append(loc)
         return parsed
