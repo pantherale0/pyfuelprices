@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 from geopy import distance
 
 from pyfuelprices.sources import Source, UpdateFailedError
-from pyfuelprices.sources.mapping import SOURCE_MAP
+from pyfuelprices.sources.mapping import SOURCE_MAP, DEFAULT_DISABLED_SOURCES
 from .fuel_locations import FuelLocation
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class FuelPrices:
                     updated = await src.update()
                     for loc in updated:
                         if loc.id in self._discovered_sites:
-                            self.get_fuel_location(loc.id).update(loc)
+                            await self.get_fuel_location(loc.id).update(loc)
                         else:
                             self.fuel_locations.append(loc)
                             self._discovered_sites.append(loc.id)
@@ -52,6 +52,14 @@ class FuelPrices:
         """Retrieve a single fuel location."""
         for loc in self.fuel_locations:
             if loc.id == site_id:
+                return loc
+        raise ValueError(f"No site has been discovered for {site_id}.")
+
+    async def async_get_fuel_location(self, site_id: str) -> FuelLocation:
+        """Retrieve a single fuel location (supporting dynamic parse)."""
+        for loc in self.fuel_locations:
+            if loc.id == site_id:
+                await loc.dynamic_build_fuels()
                 return loc
         raise ValueError(f"No site has been discovered for {site_id}.")
 
@@ -95,8 +103,9 @@ class FuelPrices:
                 )
         else:
             for src in SOURCE_MAP:
-                self.configured_sources.append(
-                    SOURCE_MAP.get(str(src))(update_interval=update_interval)
-                )
+                if src not in DEFAULT_DISABLED_SOURCES:
+                    self.configured_sources.append(
+                        SOURCE_MAP.get(str(src))(update_interval=update_interval)
+                    )
 
         return self

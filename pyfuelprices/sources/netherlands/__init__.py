@@ -1,0 +1,116 @@
+"""UK Fuel Sources and parsers."""
+
+import re
+import logging
+import uuid
+import hashlib
+from datetime import datetime, timedelta
+from time import time
+
+import aiohttp
+
+from pyfuelprices.const import CONF_FUEL_LOCATION_DYNAMIC_BUILD
+from pyfuelprices.sources import Source
+from pyfuelprices.fuel_locations import Fuel, FuelLocation
+
+from .const import DIRECTLEASE_API_PLACES, DIRECTLEAST_API_STATION
+
+_LOGGER = logging.getLogger(__name__)
+
+def _hash(hsh):
+    encoded_string = hsh.encode("utf-8")
+    hash_object = hashlib.sha1(encoded_string)
+    return hash_object.hexdigest()
+
+def _checksum_generator(url: str) -> str:
+    """Generate a directlease API checksum."""
+    # first generate a dummy device identifier
+    date_string = datetime.now().strftime("%Y%m%d")
+    device_uuid = str(uuid.uuid4())
+    date_uuid_part = f"{date_string}_{device_uuid}"
+    timestamp = int(time())
+    parts = url.split("/")
+    file_path = "/".join(parts[3:])
+    file_path = f"/{file_path}"
+    base_string = f"{date_uuid_part}/{timestamp}/{file_path}/X-Checksum"
+    return f"{date_uuid_part}/{timestamp}/{_hash(base_string)}"
+
+class DirectLeaseFuelLocation(FuelLocation):
+    """DirectLease custom fuel location."""
+
+    dl_stn_id = 0
+    update_interval = timedelta(days=1) # prevents over loading the API.
+    next_update: datetime = datetime.now()
+
+    async def dynamic_build_fuels(self):
+        """Dynamic requests to build fuels."""
+        # if (len(self.available_fuels) != 0 and self.next_update > datetime.now()):
+        #     return None
+        request_url = DIRECTLEAST_API_STATION.format(station_id=self.dl_stn_id)
+
+        session = aiohttp.ClientSession()
+        response = await session.request(
+            method="GET",
+            url=request_url,
+            headers={
+                "X-Checksum": _checksum_generator(request_url)
+            }
+        )
+        _LOGGER.debug("Got status code %s for dynamic parse of site %s",
+                        response.status,
+                        self.dl_stn_id)
+        if response.status == 200:
+            response = await response.json()
+            for fuel_raw in response["fuels"]:
+                _LOGGER.debug("Parsing fuel %s", fuel_raw)
+                f_type = re.search(r'.*?\((.*?)\)', fuel_raw["name"])
+                try:
+                    self.get_fuel(f_type).update(
+                        fuel_type=f_type,
+                        cost=fuel_raw["price"]/1000,
+                        props={}
+                    )
+                except ValueError:
+                    self.available_fuels.append(
+                        Fuel(
+                            fuel_type=f_type,
+                            cost=fuel_raw["price"]/1000,
+                            props={}
+                        )
+                    )
+
+        await session.close()
+        self.next_update = datetime.now()+self.update_interval
+
+class DirectLeaseTankServiceParser(Source):
+    """DirectLease parser for Netherlands data."""
+
+    _url = DIRECTLEASE_API_PLACES
+    update_interval = timedelta(days=1) # update once per day due to expensive OCR operations.
+
+    def parse_response(self, response) -> list[DirectLeaseFuelLocation]:
+        """Fuel location parser for DirectLease."""
+        parsed = []
+        for raw_loc in response:
+            _LOGGER.debug("Parsing DirectLease location ID %s", raw_loc["id"])
+            loc = DirectLeaseFuelLocation()
+            loc.id = f"directlease_{raw_loc['id']}"
+            loc.dl_stn_id = raw_loc["id"]
+            loc.props[CONF_FUEL_LOCATION_DYNAMIC_BUILD] = True
+            loc.lat = raw_loc["lat"]
+            loc.long = raw_loc["lng"]
+            loc.brand = raw_loc.get("brand", None)
+            loc.name = raw_loc.get("name", None)
+            if (loc.name is None and loc.brand is not None):
+                loc.name = raw_loc["brand"] + " " + raw_loc["city"]
+            else:
+                loc.name = f"Unknown site {loc.dl_stn_id}"
+                loc.brand = "Not available"
+            loc.address = "Not available"
+            loc.postal_code = "Not available"
+            loc.last_updated = datetime.now()
+            parsed.append(loc)
+        return parsed
+
+    def parse_fuels(self, fuels) -> list[Fuel]:
+        """Fuel parser not required for this module."""

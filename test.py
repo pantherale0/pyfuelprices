@@ -8,13 +8,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
-    data = FuelPrices.create()
+    data = FuelPrices.create(
+        enabled_sources=["directleasenl"]
+    )
     await data.update()
     for location_id in data.find_fuel_locations_from_point(
         point=(52.570419, 1.115850),
         radius=5.0
     ):
         loc = data.get_fuel_location(location_id)
+        _LOGGER.info("Found location: %s", loc.__dict__())
+
+    _LOGGER.info("DirectLease NL test...")
+    for location_id in data.find_fuel_locations_from_point(
+        point=(52.23817, 6.58763),
+        radius=5.0
+    ):
+        loc = await data.async_get_fuel_location(location_id)
         _LOGGER.info("Found location: %s", loc.__dict__())
 
     _LOGGER.info("Fuels test: %s", data.find_fuel_from_point(
