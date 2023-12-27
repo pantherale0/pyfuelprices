@@ -13,7 +13,7 @@ from pyfuelprices.const import CONF_FUEL_LOCATION_DYNAMIC_BUILD
 from pyfuelprices.sources import Source
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 
-from .const import DIRECTLEASE_API_PLACES, DIRECTLEAST_API_STATION
+from .const import DIRECTLEASE_API_PLACES, DIRECTLEASE_API_STATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class DirectLeaseFuelLocation(FuelLocation):
         """Dynamic requests to build fuels."""
         # if (len(self.available_fuels) != 0 and self.next_update > datetime.now()):
         #     return None
-        request_url = DIRECTLEAST_API_STATION.format(station_id=self.dl_stn_id)
+        request_url = DIRECTLEASE_API_STATION.format(station_id=self.dl_stn_id)
 
         session = aiohttp.ClientSession()
         response = await session.request(
