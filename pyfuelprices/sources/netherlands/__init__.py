@@ -41,6 +41,7 @@ class DirectLeaseFuelLocation(FuelLocation):
     dl_stn_id = 0
     update_interval = timedelta(days=1) # prevents over loading the API.
     next_update: datetime = datetime.now()
+    currency = "EUR"
 
     async def dynamic_build_fuels(self):
         """Dynamic requests to build fuels."""

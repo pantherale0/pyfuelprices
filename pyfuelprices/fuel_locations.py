@@ -16,6 +16,7 @@ class FuelLocation:
     long = 0.0
     brand = ""
     available_fuels: list[Fuel] = []
+    currency = ""
     last_updated: datetime | None = None
     postal_code: str | None = None
     props: dict = {}

@@ -8,7 +8,7 @@ class CMAParser(Source):
     """This parser is specific for the scheme by the CMA."""
 
     def parse_response(self, response) -> list[FuelLocation]:
-        """Converts the esso data into fuel price mapping."""
+        """Converts CMA data into fuel price mapping."""
         fuel_locations = []
         for location_raw in response["stations"]:
             location = FuelLocation.create(
@@ -21,6 +21,7 @@ class CMAParser(Source):
                 available_fuels=self.parse_fuels(location_raw["prices"]),
                 postal_code=location_raw["postcode"]
             )
+            location.currency = "GBP"
             # There is no name for fuel stations for this data so build one instead
             location.name = f"{location.brand} {location.postal_code}"
             fuel_locations.append(location)
