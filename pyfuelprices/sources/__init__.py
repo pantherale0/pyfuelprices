@@ -35,7 +35,9 @@ class Source:
         if self.next_update is None:
             self.next_update = datetime.now()
 
-    async def update(self) -> list[FuelLocation]:
+    async def update(self,
+                     preload_areas: dict[str, dict[str, object]] = None
+                    ) -> list[FuelLocation]:
         """Update hooks for the data source."""
         _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
         async with aiohttp.ClientSession(

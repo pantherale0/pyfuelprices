@@ -8,9 +8,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
-    data = FuelPrices.create(
-        country_code="NL"
-    )
+    preload_areas = {
+        "Norwich": {
+            "lat": 52.77121403333333,
+            "long": 1.190952433333333,
+            "radius": 50
+        }
+    }
+    data = FuelPrices.create(enabled_sources=["petrolprices"],
+                             preload_areas=preload_areas)
     await data.update()
     for location_id in data.find_fuel_locations_from_point(
         point=(52.570419, 1.115850),

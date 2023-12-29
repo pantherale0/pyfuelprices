@@ -17,20 +17,19 @@ class FuelPrices:
 
     configured_sources: list[Source] = []
     fuel_locations: dict[str, FuelLocation] = {}
-    _discovered_sites: list = []
+    configured_preload_areas: dict[str, dict[str, object]] = {}
 
     async def update(self):
         """Update helper to update all configured sources."""
-        async def update_iteration(src: Source):
+        async def update_iteration(src: Source, preload_areas: dict[str, dict[str, object]]):
             if datetime.now() > src.next_update:
                 try:
-                    updated = await src.update()
+                    updated = await src.update(preload_areas=preload_areas)
                     for loc in updated:
-                        if loc.id in self._discovered_sites:
-                            await self.get_fuel_location(loc.id).update(loc)
+                        if loc.id in self.fuel_locations:
+                            await self.fuel_locations[loc.id].update(loc)
                         else:
                             self.fuel_locations[loc.id] = loc
-                            self._discovered_sites.append(loc.id)
                 except TimeoutError:
                     _LOGGER.warning("Timeout updating data for %s, will attempt again in 30 mins",
                                     src.provider_name)
@@ -41,11 +40,9 @@ class FuelPrices:
                                     err.status,
                                     err.response)
                     src.next_update += timedelta(minutes=60)
-                except Exception as err:
-                    _LOGGER.error("%s", err)
-                    src.next_update += timedelta(minutes=60)
 
-        coros = [update_iteration(s) for s in self.configured_sources]
+        coros = [update_iteration(s, self.configured_preload_areas)
+                 for s in self.configured_sources]
         await asyncio.gather(*coros)
 
     def get_fuel_location(self, site_id: str) -> FuelLocation:
@@ -81,7 +78,8 @@ class FuelPrices:
         for loc_id in locations:
             loc = self.get_fuel_location(loc_id)
             for fuel in loc.available_fuels:
-                if fuel.fuel_type == fuel_type:
+                if (fuel.fuel_type == fuel_type and
+                    fuel.cost > 0.1):
                     fuels[loc.name] = fuel.cost
 
         return sorted(fuels.items(), key=lambda item: item[1])
@@ -97,7 +95,8 @@ class FuelPrices:
         for loc_id in locations:
             loc = await self.async_get_fuel_location(loc_id)
             for fuel in loc.available_fuels:
-                if fuel.fuel_type == fuel_type:
+                if (fuel.fuel_type == fuel_type and
+                    fuel.cost > 0.1):
                     fuels[loc.name] = fuel.cost
 
         return sorted(fuels.items(), key=lambda item: item[1])
@@ -106,10 +105,12 @@ class FuelPrices:
     def create(cls,
                enabled_sources: list[str] = None,
                update_interval: timedelta = timedelta(days=1),
-               country_code: str = ""
+               country_code: str = "",
+               preload_areas: dict[str, dict[str, object]] = None
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
+        self.configured_preload_areas = preload_areas
         if enabled_sources is not None:
             for src in enabled_sources:
                 if str(src) not in SOURCE_MAP:
