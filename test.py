@@ -3,38 +3,44 @@ import logging
 import asyncio
 
 from pyfuelprices import FuelPrices
+from pyfuelprices.const import PROP_AREA_LAT, PROP_AREA_LONG, PROP_AREA_RADIUS
 
 _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="NL"
+        country_code="NL",
+        configured_areas=[
+            {
+                PROP_AREA_RADIUS: 5.0,
+                PROP_AREA_LAT: 52.23817,
+                PROP_AREA_LONG: 6.58763
+            }
+        ]
     )
     await data.update()
-    for location_id in data.find_fuel_locations_from_point(
-        point=(52.570419, 1.115850),
+    for loc in await data.find_fuel_locations_from_point(
+        coordinates=(52.570419, 1.115850),
         radius=5.0
     ):
-        loc = data.get_fuel_location(location_id)
         _LOGGER.info("Found location: %s", loc.__dict__())
 
     _LOGGER.info("DirectLease NL test...")
-    for location_id in data.find_fuel_locations_from_point(
-        point=(52.23817, 6.58763),
+    for loc in await data.find_fuel_locations_from_point(
+        coordinates=(52.23817, 6.58763),
         radius=5.0
     ):
-        loc = await data.async_get_fuel_location(location_id)
         _LOGGER.info("Found location: %s", loc.__dict__())
 
-    _LOGGER.info("Fuels test (DirectLease): %s", await data.async_find_fuel_from_point(
-        point=(52.23817, 6.58763),
+    _LOGGER.info("Fuels test (DirectLease): %s", await data.find_fuel_from_point(
+        coordinates=(52.23817, 6.58763),
         radius=5.0,
         fuel_type="B7"
     ))
 
-    _LOGGER.info("Fuels test: %s", data.find_fuel_from_point(
-        point=(52.570419, 1.115850),
+    _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
+        coordinates=(52.570419, 1.115850),
         radius=25.0,
         fuel_type="B7"
     ))
