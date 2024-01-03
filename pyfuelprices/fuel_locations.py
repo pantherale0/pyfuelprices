@@ -159,7 +159,9 @@ class FuelLocation:
             "available_fuels": fuels,
             "currency": self._currency,
             "last_updated": self.last_updated.isoformat(),
-            "next_update": self.next_update.isoformat(),
+            "next_update": (
+                self.next_update.isoformat() if self.next_update is not None
+                else "unavailable"),
         }
 
     @final

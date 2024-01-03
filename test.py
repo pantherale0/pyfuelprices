@@ -10,12 +10,17 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="NL",
+        country_code="US",
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
                 PROP_AREA_LAT: 52.23817,
                 PROP_AREA_LONG: 6.58763
+            },
+            {
+                PROP_AREA_LAT: 38.906316,
+                PROP_AREA_LONG: -77.054750,
+                PROP_AREA_RADIUS: 5.0
             }
         ]
     )
@@ -38,6 +43,16 @@ async def main():
         radius=5.0,
         fuel_type="B7"
     ))
+
+    _LOGGER.info("GasBuddy USA Test...")
+    for loc in await data.find_fuel_locations_from_point(
+        coordinates=(38.906316, -77.054750),
+        radius=5.0
+    ):
+        _LOGGER.info("Found location: %s", loc.__dict__())
+
+    _LOGGER.info("GasBuddy retrieve individual station test: %s",
+                 await data.configured_sources["gasbuddy"].get_site(916))
 
     _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
         coordinates=(52.570419, 1.115850),
