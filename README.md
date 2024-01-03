@@ -4,8 +4,6 @@
 
 A generic python module to retrieve fuel prices for different fuel suppliers.
 
-This branch rewrites the entire module to allow for providers that require lat/long
-
 [![Build Status](https://github.com/pantherale0/pyfuelprices/workflows/build/badge.svg)](https://github.com/pantherale0/pyfuelprices/actions)
 [![Coverage Status](https://coveralls.io/repos/github/pantherale0/pyfuelprices/badge.svg?branch=main)](https://coveralls.io/github/pantherale0/pyfuelprices?branch=main)
 [![PyPi](https://img.shields.io/pypi/v/pyfuelprices)](https://pypi.org/project/pyfuelprices)
