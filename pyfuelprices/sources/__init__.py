@@ -5,7 +5,7 @@ import json
 
 from datetime import timedelta, datetime
 from typing import final
-from geopy import distance
+from geopy import distance, Nominatim, location
 
 import aiohttp
 
@@ -16,8 +16,14 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
+from pyfuelprices._version import __version__ as VERSION
 
 _LOGGER = logging.getLogger(__name__)
+
+async def geocode_reverse_lookup(coordinates: tuple) -> location.Location:
+    """Reverse GeoCode lookup."""
+    api = Nominatim(user_agent=f"pyfuelprices-{VERSION}")
+    return api.reverse(coordinates, exactly_one=True)
 
 class Source:
     """Base source, all instances inherit this."""
