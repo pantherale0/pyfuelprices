@@ -13,7 +13,10 @@ from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.const import (
     PROP_AREA_LAT,
     PROP_AREA_LONG,
-    PROP_AREA_RADIUS
+    PROP_AREA_RADIUS,
+    PROP_FUEL_LOCATION_SOURCE,
+    PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
+    PROP_FUEL_LOCATION_SOURCE_ID
 )
 from pyfuelprices.sources import Source
 
@@ -134,7 +137,10 @@ class GasBuddyUSASource(Source):
             postal_code=info['address']['postal_code'],
             currency="USD",
             props={
-                "data": station
+                "data": station,
+                PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP: True,
+                PROP_FUEL_LOCATION_SOURCE: self.provider_name,
+                PROP_FUEL_LOCATION_SOURCE_ID: station["id"]
             }
         )
         if site_id not in self.location_cache:
