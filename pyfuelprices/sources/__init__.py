@@ -113,12 +113,13 @@ class Source:
         """Remove data for fuel stations that have not been accessed."""
         for x in range(len(self.location_cache)):
             last_access = list(self.location_cache.values())[x].last_access
-            if last_access <= datetime.now()-timedelta(days=2):
-                if not list(self.location_cache.values())[x].props.get(
-                    PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
-                    False
-                ):
-                    list(self.location_cache.values())[x].available_fuels = []
+            if last_access is not None:
+                if last_access <= datetime.now()-timedelta(days=2):
+                    if not list(self.location_cache.values())[x].props.get(
+                        PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
+                        False
+                    ):
+                        list(self.location_cache.values())[x].available_fuels = []
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Parses the fuels response from the update hook.
