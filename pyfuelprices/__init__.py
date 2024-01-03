@@ -3,11 +3,11 @@
 import logging
 import asyncio
 
-from datetime import timedelta, datetime
-from geopy import distance
+from datetime import timedelta
 
 from pyfuelprices.sources import Source, UpdateFailedError
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP
+from .const import PROP_FUEL_LOCATION_SOURCE
 from .fuel_locations import FuelLocation
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,88 +15,73 @@ _LOGGER = logging.getLogger(__name__)
 class FuelPrices:
     """The base fuel prices entry class."""
 
-    configured_sources: list[Source] = []
-    fuel_locations: dict[str, FuelLocation] = {}
-    configured_preload_areas: dict[str, dict[str, object]] = {}
+    configured_sources: dict[str, Source] = {}
+    configured_areas: list[dict] = []
+    _accessed_sites: dict[str, str] = {}
 
     async def update(self):
-        """Update helper to update all configured sources."""
-        async def update_iteration(src: Source, preload_areas: dict[str, dict[str, object]]):
-            if datetime.now() > src.next_update:
-                try:
-                    updated = await src.update(preload_areas=preload_areas)
-                    for loc in updated:
-                        if loc.id in self.fuel_locations:
-                            await self.fuel_locations[loc.id].update(loc)
-                        else:
-                            self.fuel_locations[loc.id] = loc
-                except TimeoutError:
-                    _LOGGER.warning("Timeout updating data for %s, will attempt again in 30 mins",
-                                    src.provider_name)
-                    src.next_update += timedelta(minutes=30)
-                except UpdateFailedError as err:
-                    _LOGGER.warning("Error updating data for %s, response code %s: %s",
-                                    src.provider_name,
-                                    err.status,
-                                    err.response)
-                    src.next_update += timedelta(minutes=60)
-
-        coros = [update_iteration(s, self.configured_preload_areas)
-                 for s in self.configured_sources]
+        """Main data fetch / update handler."""
+        async def update_src(s: Source, a: list[dict]):
+            """Update source."""
+            async with asyncio.Semaphore(4):
+                await s.update(areas=a)
+        coros = [update_src(s, self.configured_areas) for s in self.configured_sources.values()]
         await asyncio.gather(*coros)
 
-    def get_fuel_location(self, site_id: str) -> FuelLocation:
-        """Retrieve a single fuel location."""
-        return self.fuel_locations.get(site_id)
-
-    async def async_get_fuel_location(self, site_id: str) -> FuelLocation:
+    async def get_fuel_location(self, site_id: str, source_id: str) -> FuelLocation:
         """Retrieve a single fuel location (supporting dynamic parse)."""
-        loc = self.get_fuel_location(site_id)
-        await loc.dynamic_build_fuels()
-        return loc
+        if site_id not in self._accessed_sites:
+            self._accessed_sites[site_id] = source_id
+        return await self.configured_sources[source_id].get_site(site_id)
 
-    def find_fuel_locations_from_point(self, point, radius: float) -> list[str]:
+    async def find_fuel_locations_from_point(self,
+                                       coordinates,
+                                       radius: float,
+                                       source_id: str = "") -> list[FuelLocation]:
         """Retrieve all fuel locations from a single point."""
-        _LOGGER.debug("Searching for all fuel locations at point %s with a %s mile radius.",
-                      point,
-                      radius)
-        location_ids = []
-        for site_id in self.fuel_locations:
-            if distance.distance(point,
-                                 (
-                                    self.get_fuel_location(site_id).lat,
-                                    self.get_fuel_location(site_id).long
-                                )).miles < radius:
-                location_ids.append(self.get_fuel_location(site_id).id)
-        return location_ids
+        _LOGGER.debug("Searching for all fuel locations at point %s with a %s mile radius for source %s.",
+                      coordinates,
+                      radius,
+                      source_id)
+        if source_id != "":
+            return await self.configured_sources[source_id].search_sites(
+                coordinates=coordinates,
+                radius=radius
+            )
+        locations = []
+        for src in self.configured_sources.values():
+            locations.extend(await src.search_sites(
+                coordinates=coordinates,
+                radius=radius
+            ))
+        return locations
 
-    def find_fuel_from_point(self, point, radius: float, fuel_type: str) -> dict[str, float]:
+    async def find_fuel_from_point(self,
+                             coordinates,
+                             radius: float,
+                             fuel_type: str,
+                             source_id: str = "") -> dict[str, float]:
         """Retrieve the fuel cost from a single point."""
-        _LOGGER.debug("Searching for fuel %s", fuel_type)
-        locations = self.find_fuel_locations_from_point(point, radius)
-        fuels = {}
-        for loc_id in locations:
-            loc = self.get_fuel_location(loc_id)
-            for fuel in loc.available_fuels:
-                if (fuel.fuel_type == fuel_type and
-                    fuel.cost > 0.1):
-                    fuels[loc.name] = fuel.cost
+        async def dynamic_build(l: FuelLocation):
+            """Function for asyncio to retrieve fuels quickly."""
+            async with asyncio.Semaphore(5):
+                await l.dynamic_build_fuels()
 
-        return sorted(fuels.items(), key=lambda item: item[1])
-
-    async def async_find_fuel_from_point(self,
-                                                 point,
-                                                 radius: float,
-                                                 fuel_type: str) -> dict[str, float]:
-        """Retrieve the fuel cost from a single point."""
         _LOGGER.debug("Searching for fuel %s", fuel_type)
-        locations = self.find_fuel_locations_from_point(point, radius)
+        locations = await self.find_fuel_locations_from_point(
+            coordinates,
+            radius,
+            source_id)
+        coros = [dynamic_build(l) for l in locations]
+        await asyncio.gather(*coros)
         fuels = {}
-        for loc_id in locations:
-            loc = await self.async_get_fuel_location(loc_id)
+        for loc in locations:
+            if loc.id not in self._accessed_sites:
+                self._accessed_sites[loc.id] = loc.props[PROP_FUEL_LOCATION_SOURCE]
             for fuel in loc.available_fuels:
-                if (fuel.fuel_type == fuel_type and
-                    fuel.cost > 0.1):
+                if (fuel.fuel_type == fuel_type) and (
+                    fuel.cost > 0
+                ):
                     fuels[loc.name] = fuel.cost
 
         return sorted(fuels.items(), key=lambda item: item[1])
@@ -106,24 +91,24 @@ class FuelPrices:
                enabled_sources: list[str] = None,
                update_interval: timedelta = timedelta(days=1),
                country_code: str = "",
-               preload_areas: dict[str, dict[str, object]] = None
+               configured_areas: list[dict] = None
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
-        self.configured_preload_areas = preload_areas
+        self.configured_areas = configured_areas
         if enabled_sources is not None:
             for src in enabled_sources:
                 if str(src) not in SOURCE_MAP:
                     raise ValueError(f"Source {src} is not valid for this application.")
-                self.configured_sources.append(
+                self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval)
                 )
         if enabled_sources is None:
-            def_sources = SOURCE_MAP
+            def_sources = {}
             if country_code != "":
                 def_sources = COUNTRY_MAP.get(country_code.upper())
             for src in def_sources:
-                self.configured_sources.append(
+                self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval)
                 )
 
