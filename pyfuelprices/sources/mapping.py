@@ -14,6 +14,6 @@ COUNTRY_MAP = {
     "BE": ["directlease"],
     "DE": ["tankerkoenig"],
     "NL": [k for k in NL_SOURCE_MAP],
-    "UK": [k for k in UK_SOURCE_MAP],
+    "GB": [k for k in UK_SOURCE_MAP],
     "US": ["gasbuddy"]
 }

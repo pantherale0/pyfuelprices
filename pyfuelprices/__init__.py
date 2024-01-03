@@ -5,7 +5,7 @@ import asyncio
 
 from datetime import timedelta
 
-from pyfuelprices.sources import Source, UpdateFailedError
+from pyfuelprices.sources import Source, geocode_reverse_lookup
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
 from .fuel_locations import FuelLocation
@@ -39,21 +39,27 @@ class FuelPrices:
                                        radius: float,
                                        source_id: str = "") -> list[FuelLocation]:
         """Retrieve all fuel locations from a single point."""
-        _LOGGER.debug("Searching for all fuel locations at point %s with a %s mile radius for source %s.",
+        _LOGGER.debug("Searching for all fuel locations at point %s with a %s "
+                      "mile radius for source %s.",
                       coordinates,
                       radius,
-                      source_id)
+                      source_id if source_id != "" else "any")
         if source_id != "":
             return await self.configured_sources[source_id].search_sites(
                 coordinates=coordinates,
                 radius=radius
             )
+        geocoded = await geocode_reverse_lookup(coordinates)
+        country_code = str(geocoded.raw["address"]["country_code"]).upper()
+        if country_code not in COUNTRY_MAP:
+            raise ValueError("No data source exists for the given coordinates.", geocoded)
         locations = []
-        for src in self.configured_sources.values():
-            locations.extend(await src.search_sites(
-                coordinates=coordinates,
-                radius=radius
-            ))
+        for src in COUNTRY_MAP.get(country_code, []):
+            if src in self.configured_sources:
+                locations.extend(await self.configured_sources[src].search_sites(
+                    coordinates=coordinates,
+                    radius=radius
+                ))
         return locations
 
     async def find_fuel_from_point(self,
