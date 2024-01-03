@@ -104,7 +104,7 @@ class FuelPrices:
                     SOURCE_MAP.get(str(src))(update_interval=update_interval)
                 )
         if enabled_sources is None:
-            def_sources = SOURCE_MAP
+            def_sources = {}
             if country_code != "":
                 def_sources = COUNTRY_MAP.get(country_code.upper())
             for src in def_sources:
