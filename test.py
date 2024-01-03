@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="DE",
+        country_code="AU",
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -26,6 +26,11 @@ async def main():
                 PROP_AREA_LAT: 53.068464,
                 PROP_AREA_LONG: 12.532709,
                 PROP_AREA_RADIUS: 5.0
+            },
+            {
+                PROP_AREA_LAT: -31.99432700,
+                PROP_AREA_LONG: 115.93068100,
+                PROP_AREA_RADIUS: 5.0
             }
         ]
     )
@@ -39,6 +44,13 @@ async def main():
     _LOGGER.info("TankerKoenig DE test...")
     for loc in await data.find_fuel_locations_from_point(
         coordinates=(53.068464, 12.532709),
+        radius=5.0
+    ):
+        _LOGGER.info("Found location: %s", loc.__dict__())
+
+    _LOGGER.info("FuelWatch AU test...")
+    for loc in await data.find_fuel_locations_from_point(
+        coordinates=(-31.99432700, 115.93068100),
         radius=5.0
     ):
         _LOGGER.info("Found location: %s", loc.__dict__())

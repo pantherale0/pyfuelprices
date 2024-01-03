@@ -35,8 +35,8 @@ class Source:
     _raw_data = None
     _timeout: int = 30
     _configured_areas: list[dict] = []
-    update_interval: timedelta | None = None
-    next_update: datetime | None = None
+    update_interval: timedelta = timedelta(days=1)
+    next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = {}
 
