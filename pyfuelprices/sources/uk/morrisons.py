@@ -20,3 +20,4 @@ class MorrisonsUKSource(CMAParser):
         "Sec-Fetch-User": "?1"
     }
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None

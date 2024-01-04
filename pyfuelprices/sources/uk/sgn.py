@@ -9,6 +9,7 @@ class SgnRetailUKSource(CMAParser):
     _url = "https://www.sgnretail.uk/files/data/SGN_daily_fuel_prices.json"
     provider_name = "sgnretail"
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Parses fuel data."""

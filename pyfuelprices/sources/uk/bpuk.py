@@ -13,6 +13,7 @@ class BpUKSource(CMAParser):
     }
     _timeout = 60
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Parses fuel data."""

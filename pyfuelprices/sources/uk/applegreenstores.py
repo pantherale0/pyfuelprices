@@ -8,3 +8,4 @@ class ApplegreenUKSource(CMAParser):
     _url = "https://applegreenstores.com/fuel-prices/data.json"
     provider_name = "Applegreen"
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None

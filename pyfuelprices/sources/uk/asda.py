@@ -9,3 +9,4 @@ class AsdaUKSource(CMAParser):
     provider_name = "asda"
     _timeout = 10
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None

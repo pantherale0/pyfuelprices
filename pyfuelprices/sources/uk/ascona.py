@@ -8,3 +8,4 @@ class AsconaGroupUKSource(CMAParser):
     _url = "https://fuelprices.asconagroup.co.uk/newfuel.json"
     provider_name = "asconagroup"
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None

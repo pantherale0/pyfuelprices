@@ -8,3 +8,4 @@ class MotorFuelGroupUKSource(CMAParser):
     _url = "https://fuel.motorfuelgroup.com/fuel_prices_data.json"
     provider_name = "motorfuelgroup"
     location_cache: dict[str, FuelLocation] = {}
+    location_tree = None
