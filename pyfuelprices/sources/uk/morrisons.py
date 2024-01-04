@@ -1,6 +1,6 @@
 """Morrisons UK dataprovider."""
 
-from pyfuelprices.sources.uk import CMAParser
+from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
 class MorrisonsUKSource(CMAParser):
     """Morrisons UK uses the CMA parser."""
@@ -19,3 +19,4 @@ class MorrisonsUKSource(CMAParser):
         "Sec-Fetch-Site": "cross-site",
         "Sec-Fetch-User": "?1"
     }
+    location_cache: dict[str, FuelLocation] = {}

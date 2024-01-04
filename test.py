@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="AU",
+        country_code="GB",
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -37,7 +37,7 @@ async def main():
     await data.update()
     for loc in await data.find_fuel_locations_from_point(
         coordinates=(52.570419, 1.115850),
-        radius=5.0
+        radius=25.0
     ):
         _LOGGER.info("Found location: %s", loc.__dict__())
 

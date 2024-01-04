@@ -1,7 +1,7 @@
 """Tesco UK dataprovider."""
 
 from pyfuelprices.fuel import Fuel
-from pyfuelprices.sources.uk import CMAParser
+from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
 class TescoUKSource(CMAParser):
     """Tesco UK uses the CMA parser."""
@@ -20,6 +20,7 @@ class TescoUKSource(CMAParser):
         "Sec-Fetch-Site": "cross-site",
         "Sec-Fetch-User": "?1"
     }
+    location_cache: dict[str, FuelLocation] = {}
 
 
     def parse_fuels(self, fuels) -> list[Fuel]:

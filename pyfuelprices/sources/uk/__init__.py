@@ -12,6 +12,8 @@ from pyfuelprices.fuel_locations import FuelLocation
 class CMAParser(Source):
     """This parser is specific for the scheme by the CMA."""
 
+    location_cache: dict[str, FuelLocation] = {}
+
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
         for location_raw in response["stations"]:

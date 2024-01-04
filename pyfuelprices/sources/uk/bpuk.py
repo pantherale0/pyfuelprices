@@ -1,7 +1,7 @@
 """BP UK dataprovider."""
 
 from pyfuelprices.fuel import Fuel
-from pyfuelprices.sources.uk import CMAParser
+from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
 class BpUKSource(CMAParser):
     """BP UK uses the CMA parser."""
@@ -12,6 +12,7 @@ class BpUKSource(CMAParser):
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
     }
     _timeout = 60
+    location_cache: dict[str, FuelLocation] = {}
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Parses fuel data."""

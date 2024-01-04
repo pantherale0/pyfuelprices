@@ -4,21 +4,22 @@ import logging
 import json
 
 from datetime import datetime
-from pyfuelprices.fuel_locations import FuelLocation
 from pyfuelprices.sources import UpdateFailedError
-
-from pyfuelprices.sources.uk import CMAParser
+from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
 _LOGGER = logging.getLogger(__name__)
 
 class ShellUKSource(CMAParser):
     """Shell UK uses the CMA parser although requires custom request handlers."""
 
-    _url = "https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json?sp=r&st=2023-11-21T05%3A20%3A29Z&se=2024-11-21T13%3A20%3A29Z&spr=https&sv=2022-11-02&sr=b&sig=%2F4eArYrrj1qKpD6Kn3a8on7Fm3jqTdBAKeH04gsuNho%3D"
+    _url = ("https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json"
+            "?sp=r&st=2023-11-21T05%3A20%3A29Z&se=2024-11-21T13%3A20%3A29Z&spr=https&"
+            "sv=2022-11-02&sr=b&sig=%2F4eArYrrj1qKpD6Kn3a8on7Fm3jqTdBAKeH04gsuNho%3D")
     provider_name = "shelluk"
     _headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
     }
+    location_cache: dict[str, FuelLocation] = {}
 
     async def update(self, areas=None) -> list[FuelLocation]:
         """Update hooks for the data source."""

@@ -8,6 +8,7 @@ from typing import final
 from geopy import distance, Nominatim, location
 
 import aiohttp
+import reverse_geocode
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -25,6 +26,14 @@ async def geocode_reverse_lookup(coordinates: tuple) -> location.Location:
     api = Nominatim(user_agent=f"pyfuelprices-{VERSION}")
     return api.reverse(coordinates, exactly_one=True)
 
+def geocode_country_lookup(coordinates: tuple):
+    """Reverse geocode country lookup using reverse-geocode."""
+    results = reverse_geocode.search(coordinates=[coordinates])
+    if len(results) > 0:
+        return results[0]["country_code"]
+    raise LookupError("Country not found for given coordinates.",
+                      coordinates)
+
 class Source:
     """Base source, all instances inherit this."""
 
@@ -38,7 +47,7 @@ class Source:
     update_interval: timedelta = timedelta(days=1)
     next_update: datetime = datetime.now()
     provider_name: str = ""
-    location_cache: dict[str, FuelLocation] = {}
+    location_cache: dict[str, FuelLocation] = None
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1)) -> None:
@@ -71,7 +80,7 @@ class Source:
         locations = []
         for site in self.location_cache.values():
             if distance.distance(coordinates,
-                                 (
+                                (
                                     site.lat,
                                     site.long
                                 )).miles < radius:
