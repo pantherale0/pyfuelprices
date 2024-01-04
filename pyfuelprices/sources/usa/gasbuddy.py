@@ -42,6 +42,7 @@ class GasBuddyUSASource(Source):
     _parser_radius = 0
     _parser_coords = ()
     provider_name = "gasbuddy"
+    location_cache = {}
 
     async def _send_request(self, url) -> str:
         """Send a request to the API and return the raw response."""
