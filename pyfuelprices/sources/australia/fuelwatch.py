@@ -13,7 +13,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.sources import Source
+from pyfuelprices.sources import Source, pd, KDTree
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +96,8 @@ class FuelWatchSource(Source):
 
     async def update(self, areas=None) -> list[FuelLocation]:
         """Custom update handler to look all products."""
+        _df_columns = ["lat", "long"]
+        _df_data = []
         if datetime.now() > self.next_update:
             if len(self._fuel_products) == 0:
                 await self.get_fuel_products()
@@ -110,8 +112,12 @@ class FuelWatchSource(Source):
                         self._update_fuel_station_prices(station, site_id)
                         continue
                     loc = self._parse_raw_fuel_station(station, site_id)
+                    _df_data.append([loc.lat, loc.long])
                     self.location_cache[loc.id] = loc
                     continue
+            _df = pd.DataFrame(_df_data, columns=_df_columns)
+            self.location_tree = KDTree(_df[["lat", "long"]].values,
+                                        metric="euclidean")
             return list(self.location_cache.values())
 
     async def parse_response(self, response) -> list[FuelLocation]:
