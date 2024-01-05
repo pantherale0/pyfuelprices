@@ -6,9 +6,9 @@ import json
 from datetime import timedelta, datetime
 from typing import final
 from geopy import distance, Nominatim, location
-from sklearn.neighbors import KDTree
+# from sklearn.neighbors import KDTree
 
-import pandas as pd
+# import pandas as pd
 import aiohttp
 import reverse_geocode
 
@@ -51,7 +51,7 @@ class Source:
     next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
-    location_tree: KDTree
+    # location_tree: KDTree
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1),
@@ -89,27 +89,27 @@ class Source:
     async def search_sites(self, coordinates, radius: float) -> list[FuelLocation]:
         """Return all available sites within a given radius."""
         locations = []
-        if self.location_tree is None:
-            for site in self.location_cache.values():
-                if distance.distance(coordinates,
-                                    (
-                                        site.lat,
-                                        site.long
-                                    )).miles < radius:
-                    locations.append(site)
-        else:
-            indices = self.location_tree.query([[coordinates[0], coordinates[1]]],
-                                               k = len(self.location_cache),
-                                               sort_results=True,
-                                               return_distance=False).tolist()[0]
-            for i in indices:
-                loc = list(self.location_cache.values())[i]
-                if distance.distance(coordinates,
-                                     (loc.lat, loc.long)
-                                     ).miles < radius:
-                    locations.append(loc)
-                else:
-                    break
+        # if self.location_tree is None:
+        for site in self.location_cache.values():
+            if distance.distance(coordinates,
+                                (
+                                    site.lat,
+                                    site.long
+                                )).miles < radius:
+                locations.append(site)
+        # else:
+        #     indices = self.location_tree.query([[coordinates[0], coordinates[1]]],
+        #                                        k = len(self.location_cache),
+        #                                        sort_results=True,
+        #                                        return_distance=False).tolist()[0]
+        #     for i in indices:
+        #         loc = list(self.location_cache.values())[i]
+        #         if distance.distance(coordinates,
+        #                              (loc.lat, loc.long)
+        #                              ).miles < radius:
+        #             locations.append(loc)
+        #         else:
+        #             break
         return locations
 
     async def update(self, areas=None) -> list[FuelLocation]:

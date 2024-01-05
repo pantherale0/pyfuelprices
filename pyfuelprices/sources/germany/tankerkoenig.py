@@ -35,7 +35,7 @@ class TankerKoenigSource(Source):
     }
     provider_name = "tankerkoenig"
     location_cache: dict[str, FuelLocation] = {}
-    location_tree = None
+    # location_tree = None
 
     async def _send_request(self, postcode, radius):
         """Send a request to the API for a given postcode and radius."""

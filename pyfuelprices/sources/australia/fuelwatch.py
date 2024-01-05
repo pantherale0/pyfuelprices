@@ -12,7 +12,7 @@ from pyfuelprices.const import (
     DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.sources import Source, pd, KDTree
+from pyfuelprices.sources import Source #, pd, KDTree
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,8 +98,8 @@ class FuelWatchSource(Source):
 
     async def update(self, areas=None) -> list[FuelLocation]:
         """Custom update handler to look all products."""
-        _df_columns = ["lat", "long"]
-        _df_data = []
+        # _df_columns = ["lat", "long"]
+        # _df_data = []
         if datetime.now() > self.next_update:
             if len(self._fuel_products) == 0:
                 await self.get_fuel_products()
@@ -116,11 +116,11 @@ class FuelWatchSource(Source):
                     loc = self._parse_raw_fuel_station(station, site_id)
                     self.location_cache[loc.id] = loc
                     continue
-            for x in self.location_cache.values():
-                _df_data.append([x.lat, x.long])
-            _df = pd.DataFrame(_df_data, columns=_df_columns)
-            self.location_tree = KDTree(_df[["lat", "long"]].values,
-                                        metric="euclidean")
+            # for x in self.location_cache.values():
+            #     _df_data.append([x.lat, x.long])
+            # _df = pd.DataFrame(_df_data, columns=_df_columns)
+            # self.location_tree = KDTree(_df[["lat", "long"]].values,
+            #                             metric="euclidean")
             self.next_update += self.update_interval
             return list(self.location_cache.values())
 
