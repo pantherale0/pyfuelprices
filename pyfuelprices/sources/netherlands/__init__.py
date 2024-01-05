@@ -8,13 +8,13 @@ import hashlib
 from datetime import datetime, timedelta
 from time import time
 
-from geopy import distance
 import aiohttp
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_DYNAMIC_BUILD,
     PROP_FUEL_LOCATION_SOURCE,
-    PROP_FUEL_LOCATION_SOURCE_ID
+    PROP_FUEL_LOCATION_SOURCE_ID,
+    ANDROID_USER_AGENT
 )
 from pyfuelprices.sources import Source
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
@@ -45,6 +45,38 @@ class DirectLeaseFuelLocation(FuelLocation):
     """DirectLease custom fuel location."""
 
     next_update: datetime = datetime.now()
+    _client_session: aiohttp.ClientSession
+
+    @classmethod
+    def create(cls,
+               site_id: str,
+               name: str,
+               address: str,
+               lat: float,
+               long: float,
+               brand: str,
+               available_fuels,
+               last_updated: datetime = datetime.now(),
+               postal_code: str | None = None,
+               currency: str = "",
+               props: dict = None,
+               client_session: aiohttp.ClientSession = None
+        ) -> 'FuelLocation':
+        """Create an instance of fuel location."""
+        location = cls()
+        location._id = site_id
+        location._address = address
+        location._name = name
+        location.lat = lat
+        location.long = long
+        location._brand = brand
+        location.available_fuels = available_fuels
+        location._postal_code = postal_code
+        location._currency = currency
+        location.last_updated = last_updated
+        location.props = props
+        location._client_session = client_session
+        return location
 
     async def dynamic_build_fuels(self):
         """Dynamic requests to build fuels."""
@@ -54,12 +86,13 @@ class DirectLeaseFuelLocation(FuelLocation):
             station_id=self.props[PROP_FUEL_LOCATION_SOURCE_ID]
         )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.request(
+        try:
+            async with self._client_session.request(
             method="GET",
             url=request_url,
             headers={
-                "X-Checksum": _checksum_generator(request_url)
+                "X-Checksum": _checksum_generator(request_url),
+                "User-Agent": ANDROID_USER_AGENT
             }) as response:
                 _LOGGER.debug("Got status code %s for dynamic parse of site %s",
                                 response.status,
@@ -96,23 +129,27 @@ class DirectLeaseFuelLocation(FuelLocation):
                                 )
                         except ValueError:
                             if fuel_raw.get("price", None) is not None:
-                                self._available_fuels.append(
+                                self.available_fuels.append(
                                     Fuel(
                                         fuel_type=f_type,
                                         cost=fuel_raw["price"]/1000,
                                         props={}
                                     )
                                 )
-
-        self.next_update = datetime.now()+timedelta(
+            self.next_update = datetime.now()+timedelta(
             days=1,
             minutes=random.randint(1,30)) # prevent overloading the API and false DDoS flags
+
+        except aiohttp.ServerDisconnectedError as err:
+            _LOGGER.warning("Error sending request to URL %s: %s",
+                            request_url,
+                            err)
 
 class DirectLeaseTankServiceParser(Source):
     """DirectLease parser for Belgium/Netherlands data."""
 
     _url = DIRECTLEASE_API_PLACES
-    update_interval = timedelta(days=1) # update once per day due to prevent API spam.
+    update_interval = timedelta(days=1) # update once per day to prevent API spam.
     provider_name = "directlease"
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
@@ -142,7 +179,8 @@ class DirectLeaseTankServiceParser(Source):
                         PROP_FUEL_LOCATION_SOURCE: self.provider_name,
                         PROP_FUEL_LOCATION_SOURCE_ID: raw_loc["id"]
                     },
-                    last_updated=datetime.now()
+                    last_updated=datetime.now(),
+                    client_session=self._client_session
                 )
                 if (loc.name is None and loc.brand is not None):
                     loc.name = raw_loc["brand"] + " " + raw_loc["city"]
@@ -150,9 +188,15 @@ class DirectLeaseTankServiceParser(Source):
                     loc.name = f"Unknown site {loc.props[PROP_FUEL_LOCATION_SOURCE_ID]}"
                 if loc.brand is None:
                     loc.brand = "Unknown"
-                if self._check_if_coord_in_area((loc.lat, loc.long)):
-                    await loc.dynamic_build_fuels()
                 self.location_cache[site_id] = loc
+
+        for site in self.location_cache.values():
+            if (self._check_if_coord_in_area((
+                    site.lat, site.long)) or (
+                    len(site.available_fuels)>0
+                )):
+                    await site.dynamic_build_fuels()
+
         return list(self.location_cache.values())
 
     def parse_fuels(self, fuels) -> list[Fuel]:

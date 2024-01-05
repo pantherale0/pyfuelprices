@@ -12,10 +12,10 @@ class FuelLocation:
     _id = ""
     _name = ""
     _address = ""
-    _lat = 0.0
-    _long = 0.0
+    lat = 0.0
+    long = 0.0
     _brand = ""
-    _available_fuels: list[Fuel] = []
+    available_fuels: list[Fuel] = []
     _currency = ""
     _postal_code: str | None = None
     last_updated: datetime | None = None
@@ -63,33 +63,6 @@ class FuelLocation:
         """Set site address."""
         self._address = new_val
 
-
-    @final
-    @property
-    def lat(self) -> float:
-        """Return site latitude."""
-        self.last_access = datetime.now()
-        return self._lat
-
-    @final
-    @lat.setter
-    def lat(self, new_val):
-        """Set site lat"""
-        self._lat = new_val
-
-    @final
-    @property
-    def long(self) -> float:
-        """Return site longitude."""
-        self.last_access = datetime.now()
-        return self._long
-
-    @final
-    @long.setter
-    def long(self, new_val):
-        """Set site longitude."""
-        self._long = new_val
-
     @final
     @property
     def brand(self) -> str:
@@ -102,19 +75,6 @@ class FuelLocation:
     def brand(self, new_val):
         """Set fuel brand."""
         self._brand = new_val
-
-    @final
-    @property
-    def available_fuels(self) -> list[Fuel]:
-        """Return site name."""
-        self.last_access = datetime.now()
-        return self._available_fuels
-
-    @final
-    @available_fuels.setter
-    def available_fuels(self, new_val):
-        """Set available fuels."""
-        self._available_fuels = new_val
 
     @final
     @property
@@ -146,15 +106,15 @@ class FuelLocation:
     def __dict__(self) -> dict:
         """Convert the object to a dict."""
         fuels = {}
-        for fuel in self._available_fuels:
+        for fuel in self.available_fuels:
             fuels[fuel.fuel_type] = fuel.cost
         return {
             "id": self._id,
             "name": self._name,
             "address": self._address,
             "postal_code": self._postal_code,
-            "latitude": self._lat,
-            "longitude": self._long,
+            "latitude": self.lat,
+            "longitude": self.long,
             "brand": self._brand,
             "available_fuels": fuels,
             "currency": self._currency,
@@ -169,14 +129,14 @@ class FuelLocation:
         """Update the object."""
         self._name = updated.name
         self._address = updated.address
-        self._lat = updated.lat
-        self._long = updated.long
+        self.lat = updated.lat
+        self.long = updated.long
         self._brand = updated.brand
         self.last_updated = updated.last_updated
         self._postal_code = updated.postal_code
         if (
             updated.props.get(PROP_FUEL_LOCATION_DYNAMIC_BUILD, False)
-            and len(self._available_fuels)>0):
+            and len(self.available_fuels)>0):
             await updated.dynamic_build_fuels()
         for fuel in updated.available_fuels:
             try:
@@ -226,10 +186,10 @@ class FuelLocation:
         location._id = site_id
         location._address = address
         location._name = name
-        location._lat = lat
-        location._long = long
+        location.lat = lat
+        location.long = long
         location._brand = brand
-        location._available_fuels = available_fuels
+        location.available_fuels = available_fuels
         location._postal_code = postal_code
         location._currency = currency
         location.last_updated = last_updated

@@ -3,7 +3,6 @@ import logging
 import json
 import uuid
 
-import aiohttp
 # use these-united-states for geocoding to states
 import united_states
 from geopy import distance
@@ -16,7 +15,8 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS,
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
-    PROP_FUEL_LOCATION_SOURCE_ID
+    PROP_FUEL_LOCATION_SOURCE_ID,
+    ANDROID_USER_AGENT
 )
 from pyfuelprices.sources import Source
 
@@ -36,7 +36,8 @@ class GasBuddyUSASource(Source):
     """GasBuddy USA data source."""
 
     _headers = {
-        "apikey": "56c57e8f1132465d817d6a753c59387e"
+        "apikey": "56c57e8f1132465d817d6a753c59387e",
+        "User-Agent": ANDROID_USER_AGENT
     }
     _usa = united_states.UnitedStates()
     _parser_radius = 0
@@ -47,13 +48,13 @@ class GasBuddyUSASource(Source):
     async def _send_request(self, url) -> str:
         """Send a request to the API and return the raw response."""
         _LOGGER.debug("Sending HTTP request to GasBuddy with URL %s", url)
-        async with aiohttp.ClientSession(headers=self._headers) as session:
-            async with session.get(url=url) as response:
-                if response.ok:
-                    return await response.text()
-                _LOGGER.error("Error sending request to %s: %s",
-                              url,
-                              response)
+        async with self._client_session.get(url=url,
+                                            headers=self._headers) as response:
+            if response.ok:
+                return await response.text()
+            _LOGGER.error("Error sending request to %s: %s",
+                            url,
+                            response)
 
     async def get_site(self, site_id) -> FuelLocation:
         """Return the site from the location cache."""

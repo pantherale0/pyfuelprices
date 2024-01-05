@@ -3,7 +3,7 @@
 import logging
 import json
 
-import aiohttp
+from datetime import datetime
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -11,7 +11,8 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS,
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
-    PROP_FUEL_LOCATION_SOURCE_ID
+    PROP_FUEL_LOCATION_SOURCE_ID,
+    DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
@@ -30,7 +31,7 @@ CONST_TANKERKOENIG_GET_STATIONS = (
 class TankerKoenigSource(Source):
     """TankerKoenig Source."""
     _headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
+        "User-Agent": DESKTOP_USER_AGENT
     }
     provider_name = "tankerkoenig"
     location_cache: dict[str, FuelLocation] = {}
@@ -45,42 +46,45 @@ class TankerKoenigSource(Source):
         )
         _LOGGER.debug("Sending request to TankerKoenig: %s",
                       url)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.ok:
-                    return await response.text()
-                _LOGGER.error("Error sending request to %s: %s",
-                              url,
-                              response)
+        async with self._client_session.get(
+            url,
+            headers=self._headers) as response:
+            if response.ok:
+                return await response.text()
+            _LOGGER.error("Error sending request to %s: %s",
+                            url,
+                            response)
 
     async def update(self, areas=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query TankerKoenig on areas."""
-        self._configured_areas=[] if areas is None else areas
-        for area in self._configured_areas:
-            geocode = await geocode_reverse_lookup(
-                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-            )
-            if geocode.raw["address"]["country_code"] != "de":
-                _LOGGER.debug("Skipping area %s as not in DE.",
-                              area)
-                continue
-            response_raw = json.loads(await self._send_request(
-                postcode=geocode.raw["address"]["postcode"],
-                radius=area[PROP_AREA_RADIUS]
-            ))
-            if response_raw["ok"]:
-                await self.parse_response(response_raw["data"])
-            else:
-                _LOGGER.error("Error sending request to %s: %s",
-                              self.provider_name,
-                              response_raw)
+        if datetime.now() > self.next_update:
+            self._configured_areas=[] if areas is None else areas
+            for area in self._configured_areas:
+                geocode = await geocode_reverse_lookup(
+                    (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+                )
+                if geocode.raw["address"]["country_code"] != "de":
+                    _LOGGER.debug("Skipping area %s as not in DE.",
+                                area)
+                    continue
+                response_raw = json.loads(await self._send_request(
+                    postcode=geocode.raw["address"]["postcode"],
+                    radius=area[PROP_AREA_RADIUS]
+                ))
+                if response_raw["ok"]:
+                    await self.parse_response(response_raw["data"])
+                else:
+                    _LOGGER.error("Error sending request to %s: %s",
+                                self.provider_name,
+                                response_raw)
+            self.next_update += self.update_interval
         return list(self.location_cache.values())
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""
         site_id = f"{self.provider_name}_{station['id']}"
         _LOGGER.debug("Parsing TankerKoenig location ID %s", site_id)
-        return FuelLocation.create(
+        loc = FuelLocation.create(
             site_id=site_id,
             name=station["name"],
             address=f"{station['house_number']} {station['street']} {station['post_code']}",
@@ -97,6 +101,10 @@ class TankerKoenigSource(Source):
                 "opening_times": station.get("openingTimes", {}).get("openingTimes", [])
             }
         )
+        loc.next_update = self.next_update if self.next_update > datetime.now() else (
+            self.next_update + self.update_interval
+        )
+        return loc
 
     async def parse_response(self, response) -> list[FuelLocation]:
         for station_raw in response.get("stations", []):

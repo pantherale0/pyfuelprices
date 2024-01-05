@@ -46,6 +46,7 @@ class Source:
     _raw_data = None
     _timeout: int = 30
     _configured_areas: list[dict] = []
+    _client_session: aiohttp.ClientSession = None
     update_interval: timedelta = timedelta(days=1)
     next_update: datetime = datetime.now()
     provider_name: str = ""
@@ -53,13 +54,20 @@ class Source:
     location_tree: KDTree
 
     def __init__(self,
-                 update_interval: timedelta = timedelta(days=1)) -> None:
+                 update_interval: timedelta = timedelta(days=1),
+                 client_session: aiohttp.ClientSession = None) -> None:
         """Start a new instance of a source."""
         self.update_interval = update_interval
         self._client_session: aiohttp.ClientSession = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=self._timeout),
             headers=self._headers
         )
+        if client_session is None:
+            self._client_session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self._timeout)
+            )
+        else:
+            self._client_session = client_session
         if self.next_update is None:
             self.next_update = datetime.now()
 
@@ -110,31 +118,28 @@ class Source:
         self._configured_areas=[] if areas is None else areas
         self._clear_cache()
         if datetime.now() > self.next_update:
-            async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=self._timeout),
+            response = await self._client_session.request(
+                method=self._method,
+                url=self._url,
+                json=self._request_body,
                 headers=self._headers
-            ) as session:
-                response = await session.request(
-                    method=self._method,
-                    url=self._url,
-                    json=self._request_body
-                )
-                _LOGGER.debug("Update request completed for %s with status %s",
-                            self.provider_name, response.status)
-                if response.status == 200:
-                    self.next_update += self.update_interval
-                    if "application/json" not in response.content_type:
-                        return await self.parse_response(
-                            response=json.loads(await response.text())
-                        )
+            )
+            _LOGGER.debug("Update request completed for %s with status %s",
+                        self.provider_name, response.status)
+            if response.status == 200:
+                self.next_update += self.update_interval
+                if "application/json" not in response.content_type:
                     return await self.parse_response(
-                        response=await response.json()
+                        response=json.loads(await response.text())
                     )
-                raise UpdateFailedError(
-                    status=response.status,
-                    response=await response.text(),
-                    headers=response.headers
+                return await self.parse_response(
+                    response=await response.json()
                 )
+            raise UpdateFailedError(
+                status=response.status,
+                response=await response.text(),
+                headers=response.headers
+            )
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Parses the response from the update hook."""

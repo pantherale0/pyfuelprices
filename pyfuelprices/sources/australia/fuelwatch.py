@@ -5,12 +5,11 @@ from datetime import datetime
 import logging
 import json
 
-import aiohttp
-
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE,
-    PROP_FUEL_LOCATION_SOURCE_ID
+    PROP_FUEL_LOCATION_SOURCE_ID,
+    DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
 from pyfuelprices.sources import Source, pd, KDTree
@@ -29,20 +28,21 @@ class FuelWatchSource(Source):
     provider_name = "fuelwatch"
     _fuel_products: list[str] = []
     _headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
+        "User-Agent": DESKTOP_USER_AGENT
     }
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
 
     async def _send_request(self, url):
         """Send a HTTP request to the API and return the text."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.ok:
-                    return await response.text()
-                _LOGGER.error("Error sending request to %s: %s",
-                              url,
-                              response)
+        async with self._client_session.get(
+            url,
+            headers=self._headers) as response:
+            if response.ok:
+                return await response.text()
+            _LOGGER.error("Error sending request to %s: %s",
+                            url,
+                            response)
 
     async def get_fuel_products(self):
         """Retrieves available fuel products."""
@@ -55,7 +55,7 @@ class FuelWatchSource(Source):
     def _parse_raw_fuel_station(self, station, site_id) -> FuelLocation:
         """Convert an instance of a single fuel station into a FuelLocation."""
         _LOGGER.debug("Parsing FuelWatch location ID %s", site_id)
-        return FuelLocation.create(
+        loc = FuelLocation.create(
             site_id=site_id,
             name=station["siteName"],
             address=f"{station['address']['line1']} {station['address']['postCode']}",
@@ -76,6 +76,8 @@ class FuelWatchSource(Source):
                 "data": station
             }
         )
+        loc.next_update = self.next_update + self.update_interval
+        return loc
 
     def _update_fuel_station_prices(self, station, site_id):
         """Internal method to update station prices."""
@@ -112,12 +114,14 @@ class FuelWatchSource(Source):
                         self._update_fuel_station_prices(station, site_id)
                         continue
                     loc = self._parse_raw_fuel_station(station, site_id)
-                    _df_data.append([loc.lat, loc.long])
                     self.location_cache[loc.id] = loc
                     continue
+            for x in self.location_cache.values():
+                _df_data.append([x.lat, x.long])
             _df = pd.DataFrame(_df_data, columns=_df_columns)
             self.location_tree = KDTree(_df[["lat", "long"]].values,
                                         metric="euclidean")
+            self.next_update += self.update_interval
             return list(self.location_cache.values())
 
     async def parse_response(self, response) -> list[FuelLocation]:

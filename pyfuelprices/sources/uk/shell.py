@@ -4,6 +4,7 @@ import logging
 import json
 
 from datetime import datetime
+from pyfuelprices.const import DESKTOP_USER_AGENT
 from pyfuelprices.sources import UpdateFailedError
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
@@ -17,7 +18,7 @@ class ShellUKSource(CMAParser):
             "sv=2022-11-02&sr=b&sig=%2F4eArYrrj1qKpD6Kn3a8on7Fm3jqTdBAKeH04gsuNho%3D")
     provider_name = "shelluk"
     _headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0"
+        "User-Agent": DESKTOP_USER_AGENT
     }
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
