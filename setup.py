@@ -17,7 +17,7 @@ REQUIREMENTS = [
     'numpy == 1.26.0',
     'scikit-learn == 1.3.0',
     'reverse-geocode == 1.4.1',
-    'these-united-states == 1.2',
+    'these-united-states == 1.1.0.21',
     'geopy == 2.3.0',
 ]
 
