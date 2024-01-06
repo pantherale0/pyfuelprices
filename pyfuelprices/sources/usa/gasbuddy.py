@@ -118,9 +118,6 @@ class GasBuddyUSASource(Source):
                     )
                 )
                 await self.parse_response(json.loads(response_raw))
-            else:
-                _LOGGER.warning("Ignoring area %s as it is not found in USA.",
-                                area)
         return list(self.location_cache.values())
 
     async def parse_raw_fuel_station(self, station) -> FuelLocation:
