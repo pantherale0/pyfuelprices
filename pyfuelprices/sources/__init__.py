@@ -5,7 +5,13 @@ import json
 
 from datetime import timedelta, datetime
 from typing import final
-from geopy import distance, Nominatim, location, adapters
+from geopy import (
+    distance,
+    Nominatim,
+    location,
+    adapters,
+    exc as geopyexc
+)
 # from sklearn.neighbors import KDTree
 
 # import pandas as pd
@@ -28,7 +34,7 @@ async def geocode_reverse_lookup(coordinates: tuple) -> location.Location:
     async with Nominatim(
         user_agent=f"pyfuelprices-{VERSION}",
         adapter_factory=adapters.AioHTTPAdapter) as geolocator:
-        return await geolocator.reverse(coordinates, exactly_one=True)
+        return await geolocator.reverse(coordinates, exactly_one=True, timeout=15)
 
 def geocode_country_lookup(coordinates: tuple):
     """Reverse geocode country lookup using reverse-geocode."""

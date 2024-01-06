@@ -17,7 +17,8 @@ from pyfuelprices.const import (
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
     Source,
-    geocode_reverse_lookup
+    geocode_reverse_lookup,
+    geopyexc
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,9 +61,14 @@ class TankerKoenigSource(Source):
         if datetime.now() > self.next_update:
             self._configured_areas=[] if areas is None else areas
             for area in self._configured_areas:
-                geocode = await geocode_reverse_lookup(
-                    (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                )
+                try:
+                    geocode = await geocode_reverse_lookup(
+                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+                    )
+                except geopyexc.GeocoderTimedOut:
+                    _LOGGER.warning("Timeout occured while geocoding area %s.",
+                                    area)
+                    continue
                 if geocode.raw["address"]["country_code"] != "de":
                     _LOGGER.debug("Skipping area %s as not in DE.",
                                 area)
