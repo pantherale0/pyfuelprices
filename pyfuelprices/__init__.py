@@ -26,8 +26,11 @@ class FuelPrices:
         """Main data fetch / update handler."""
         async def update_src(s: Source, a: list[dict]):
             """Update source."""
-            async with asyncio.Semaphore(4):
-                await s.update(areas=a)
+            try:
+                async with asyncio.Semaphore(4):
+                    await s.update(areas=a)
+            except TimeoutError as err:
+                _LOGGER.warning("Timeout updating %s: %s", s.provider_name, err)
         coros = [update_src(s, self.configured_areas) for s in self.configured_sources.values()]
         await asyncio.gather(*coros)
 
