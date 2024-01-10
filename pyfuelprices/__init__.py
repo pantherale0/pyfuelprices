@@ -20,12 +20,7 @@ class FuelPrices:
     configured_sources: dict[str, Source] = {}
     configured_areas: list[dict] = []
     _accessed_sites: dict[str, str] = {}
-    _client_session: aiohttp.ClientSession = aiohttp.ClientSession(
-        connector=aiohttp.TCPConnector(
-            use_dns_cache=True,
-            ttl_dns_cache=360
-        )
-    )
+    client_session: aiohttp.ClientSession = None
 
     async def update(self):
         """Main data fetch / update handler."""
@@ -104,18 +99,28 @@ class FuelPrices:
                enabled_sources: list[str] = None,
                update_interval: timedelta = timedelta(days=1),
                country_code: str = "",
-               configured_areas: list[dict] = None
+               configured_areas: list[dict] = None,
+               timeout: timedelta = timedelta(seconds=30)
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
         self.configured_areas = configured_areas
+        self.client_session = aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(
+                use_dns_cache=True,
+                ttl_dns_cache=360
+            ),
+            timeout=aiohttp.ClientTimeout(
+                total=timeout.seconds
+            )
+        )
         if enabled_sources is not None:
             for src in enabled_sources:
                 if str(src) not in SOURCE_MAP:
                     raise ValueError(f"Source {src} is not valid for this application.")
                 self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval,
-                                             client_session=self._client_session)
+                                             client_session=self.client_session)
                 )
         if enabled_sources is None:
             def_sources = {}
@@ -124,7 +129,7 @@ class FuelPrices:
             for src in def_sources:
                 self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval,
-                                             client_session=self._client_session)
+                                             client_session=self.client_session)
                 )
 
         return self
