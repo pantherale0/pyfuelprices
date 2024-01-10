@@ -6,7 +6,10 @@ class Fuel:
     def __init__(self, fuel_type: str, cost: float, props: dict):
         """Initalize a fuel price."""
         self.fuel_type = fuel_type
-        self.cost = cost
+        if cost is None:
+            self.cost = 0
+        else:
+            self.cost = cost
         self.props = props
 
     def __dict__(self) -> dict:
@@ -20,5 +23,8 @@ class Fuel:
     def update(self, fuel_type: str, cost: float, props: dict):
         """Update this instance of data."""
         self.fuel_type = fuel_type
-        self.cost = cost
+        if cost is None:
+            self.cost = 0
+        else:
+            self.cost = cost
         self.props = props
