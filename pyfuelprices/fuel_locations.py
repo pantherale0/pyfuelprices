@@ -132,7 +132,7 @@ class FuelLocation:
         self.lat = updated.lat
         self.long = updated.long
         self._brand = updated.brand
-        self.last_updated = updated.last_updated
+        self.last_updated = datetime.now()
         self._postal_code = updated.postal_code
         if (
             updated.props.get(PROP_FUEL_LOCATION_DYNAMIC_BUILD, False)
