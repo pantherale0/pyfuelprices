@@ -92,6 +92,7 @@ class Source:
 
     async def get_site(self, site_id) -> FuelLocation:
         """Return an individual fuel location from the remote API."""
+        await self.location_cache[site_id].dynamic_build_fuels()
         return self.location_cache[site_id]
 
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
@@ -104,6 +105,7 @@ class Source:
                                     site.long
                                 )).miles
             if dist < radius:
+                await site.dynamic_build_fuels()
                 locations.append(
                     {
                         **site.__dict__(),

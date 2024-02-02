@@ -167,8 +167,7 @@ class FuelLocation:
 
     async def dynamic_build_fuels(self):
         """Dynamic build of fuels for when accessing this data would normally be costly."""
-        if self.props.get(PROP_FUEL_LOCATION_DYNAMIC_BUILD, False):
-            raise NotImplementedError("Dynamic build not available for this source.")
+        return True
 
     @classmethod
     def create(cls,

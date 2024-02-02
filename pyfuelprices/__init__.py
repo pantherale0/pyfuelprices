@@ -76,11 +76,10 @@ class FuelPrices:
         async def dynamic_build(l: dict):
             """Function for asyncio to retrieve fuels quickly."""
             async with asyncio.Semaphore(5):
-                data = await self.get_fuel_location(
+                await self.get_fuel_location(
                     l["id"],
                     str(l["props"]["source"]).lower()
                 )
-                print(data)
 
         _LOGGER.debug("Searching for fuel %s", fuel_type)
         locations = await self.find_fuel_locations_from_point(

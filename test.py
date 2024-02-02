@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="AU",
+        country_code="GB",
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
