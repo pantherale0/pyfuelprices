@@ -122,6 +122,7 @@ class FuelLocation:
             "next_update": (
                 self.next_update.isoformat() if self.next_update is not None
                 else "unavailable"),
+            "props": self.props
         }
 
     @final
@@ -134,6 +135,8 @@ class FuelLocation:
         self._brand = updated.brand
         self.last_updated = datetime.now()
         self._postal_code = updated.postal_code
+        self.next_update = updated.next_update
+
         if (
             updated.props.get(PROP_FUEL_LOCATION_DYNAMIC_BUILD, False)
             and len(self.available_fuels)>0):
@@ -177,6 +180,7 @@ class FuelLocation:
                brand: str,
                available_fuels,
                last_updated: datetime = datetime.now(),
+               next_update: datetime = None,
                postal_code: str | None = None,
                currency: str = "",
                props: dict = None
@@ -194,4 +198,5 @@ class FuelLocation:
         location._currency = currency
         location.last_updated = last_updated
         location.props = props
+        location.next_update = next_update
         return location

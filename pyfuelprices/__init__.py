@@ -43,7 +43,7 @@ class FuelPrices:
     async def find_fuel_locations_from_point(self,
                                        coordinates,
                                        radius: float,
-                                       source_id: str = "") -> list[FuelLocation]:
+                                       source_id: str = "") -> list[dict]:
         """Retrieve all fuel locations from a single point."""
         _LOGGER.debug("Searching for all fuel locations at point %s with a %s "
                       "mile radius for source %s.",
@@ -71,12 +71,16 @@ class FuelPrices:
                              coordinates,
                              radius: float,
                              fuel_type: str,
-                             source_id: str = "") -> dict[str, float]:
+                             source_id: str = "") -> list[dict]:
         """Retrieve the fuel cost from a single point."""
-        async def dynamic_build(l: FuelLocation):
+        async def dynamic_build(l: dict):
             """Function for asyncio to retrieve fuels quickly."""
             async with asyncio.Semaphore(5):
-                await l.dynamic_build_fuels()
+                data = await self.get_fuel_location(
+                    l["id"],
+                    str(l["props"]["source"]).lower()
+                )
+                print(data)
 
         _LOGGER.debug("Searching for fuel %s", fuel_type)
         locations = await self.find_fuel_locations_from_point(
@@ -85,17 +89,20 @@ class FuelPrices:
             source_id)
         coros = [dynamic_build(l) for l in locations]
         await asyncio.gather(*coros)
-        fuels = {}
+        fuels: list = []
         for loc in locations:
-            if loc.id not in self._accessed_sites:
-                self._accessed_sites[loc.id] = loc.props[PROP_FUEL_LOCATION_SOURCE]
-            for fuel in loc.available_fuels:
-                if (fuel.fuel_type == fuel_type) and (
-                    fuel.cost > 0
+            if loc["id"] not in self._accessed_sites:
+                self._accessed_sites[loc["id"]] = loc["props"][PROP_FUEL_LOCATION_SOURCE]
+            for fuel in loc["available_fuels"]:
+                if (fuel == fuel_type) and (
+                    loc["available_fuels"][fuel] > 0
                 ):
-                    fuels[loc.name] = fuel.cost
-
-        return sorted(fuels.items(), key=lambda item: item[1])
+                    fuels.append({
+                        "name": loc["name"],
+                        "cost": loc["available_fuels"][fuel],
+                        "distance": loc["distance"]
+                    })
+        return sorted(fuels, key=lambda item: item["cost"])
 
     @classmethod
     def create(cls,

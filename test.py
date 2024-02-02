@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        country_code="AT",
+        country_code="AU",
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -20,7 +20,7 @@ async def main():
             {
                 PROP_AREA_LAT: 38.906316,
                 PROP_AREA_LONG: -77.054750,
-                PROP_AREA_RADIUS: 5.0
+                PROP_AREA_RADIUS: 5. # US
             },
             {
                 PROP_AREA_LAT: 53.068464,
@@ -45,28 +45,28 @@ async def main():
             coordinates=(52.570419, 1.115850),
             radius=25.0
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         _LOGGER.info("TankerKoenig DE test...")
         for loc in await data.find_fuel_locations_from_point(
             coordinates=(53.068464, 12.532709),
             radius=5.0
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         _LOGGER.info("FuelWatch AU test...")
         for loc in await data.find_fuel_locations_from_point(
             coordinates=(-31.99432700, 115.93068100),
             radius=5.0
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         _LOGGER.info("DirectLease NL test...")
         for loc in await data.find_fuel_locations_from_point(
             coordinates=(52.23817, 6.58763),
             radius=5.0
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         _LOGGER.info("Fuels test (DirectLease): %s", await data.find_fuel_from_point(
             coordinates=(52.23817, 6.58763),
@@ -80,14 +80,14 @@ async def main():
             coordinates=(48.5140105, 14.5043854),
             radius=25.0,
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         _LOGGER.info("GasBuddy USA Test...")
         for loc in await data.find_fuel_locations_from_point(
             coordinates=(38.906316, -77.054750),
             radius=5.0
         ):
-            _LOGGER.info("Found location: %s", loc.__dict__())
+            _LOGGER.info("Found location: %s", loc)
 
         if "gasbuddy" in data.configured_sources:
             _LOGGER.info("GasBuddy retrieve individual station test: %s",

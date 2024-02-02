@@ -35,7 +35,8 @@ class CMAParser(Source):
                         PROP_FUEL_LOCATION_SOURCE: self.provider_name,
                         PROP_FUEL_LOCATION_SOURCE_ID: location_raw["site_id"],
                         PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP: True
-                    }
+                    },
+                    next_update=self.next_update
                 )
             if site_id not in self.location_cache:
                 self.location_cache[site_id] = location

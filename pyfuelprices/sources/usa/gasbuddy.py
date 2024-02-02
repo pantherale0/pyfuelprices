@@ -72,7 +72,7 @@ class GasBuddyUSASource(Source):
             station=json.loads(response_raw)["station"]
         )
 
-    async def search_sites(self, coordinates, radius: float) -> list[FuelLocation]:
+    async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
         # first query the API to populate cache / update data in case this data is unavailable.
         await self.update(
@@ -84,12 +84,16 @@ class GasBuddyUSASource(Source):
         )
         locations = []
         for site in self.location_cache.values():
-            if distance.distance(coordinates,
+            dist = distance.distance(coordinates,
                                  (
                                     site.lat,
                                     site.long
-                                )).miles < radius:
-                locations.append(site)
+                                )).miles
+            if dist < radius:
+                locations.append({
+                    **site.__dict__(),
+                    "distance": dist
+                })
         return locations
 
     async def update(self, areas=None) -> list[FuelLocation]:
@@ -140,7 +144,8 @@ class GasBuddyUSASource(Source):
                 PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP: True,
                 PROP_FUEL_LOCATION_SOURCE: self.provider_name,
                 PROP_FUEL_LOCATION_SOURCE_ID: station["id"]
-            }
+            },
+            next_update=self.next_update
         )
         if site_id not in self.location_cache:
             self.location_cache[site_id] = loc
