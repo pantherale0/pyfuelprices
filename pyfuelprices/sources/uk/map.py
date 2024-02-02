@@ -7,6 +7,7 @@ from .asda import AsdaUKSource
 from .bpuk import BpUKSource
 from .essouk import EssoUKSource
 from .morrisons import MorrisonsUKSource
+from .moto import MotowayUKSource
 from .motorfuelgroup import MotorFuelGroupUKSource
 from .rontec import RontecUKSource
 from .sainsburys import SainsburysUKSource
@@ -21,6 +22,7 @@ SOURCE_MAP: dict[str, Source] = {
     "bpuk": BpUKSource,
     "essouk": EssoUKSource,
     "morrisons": MorrisonsUKSource,
+    "motoway": MotowayUKSource,
     "motorfuelgroup": MotorFuelGroupUKSource,
     "rontec": RontecUKSource,
     "sainsburys": SainsburysUKSource,
