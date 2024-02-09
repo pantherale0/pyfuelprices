@@ -196,7 +196,7 @@ class DirectLeaseTankServiceParser(Source):
                     site.lat, site.long)) or (
                     len(site.available_fuels)>0
                 )):
-                    await site.dynamic_build_fuels()
+                await site.dynamic_build_fuels()
 
         return list(self.location_cache.values())
 

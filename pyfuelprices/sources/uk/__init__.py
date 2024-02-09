@@ -5,7 +5,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID
 )
-from pyfuelprices.sources import Source #, KDTree, pd
+from pyfuelprices.sources import Source
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
 
@@ -13,12 +13,9 @@ class CMAParser(Source):
     """This parser is specific for the scheme by the CMA."""
 
     location_cache: dict[str, FuelLocation] = {}
-    # location_tree: KDTree
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
-        # _df_columns = ["lat", "long"]
-        # _df_data = []
         for location_raw in response["stations"]:
             site_id = f"{self.provider_name}_{location_raw['site_id']}"
             location = FuelLocation.create(
@@ -40,11 +37,8 @@ class CMAParser(Source):
                 )
             if site_id not in self.location_cache:
                 self.location_cache[site_id] = location
-                # _df_data.append([location.lat, location.long])
             else:
-                self.location_cache[site_id].update(location)
-        # _df = pd.DataFrame(_df_data, columns=_df_columns)
-        # self.location_tree = KDTree(_df[["lat", "long"]].values, metric="euclidean")
+                await self.location_cache[site_id].update(location)
         return list(self.location_cache.values())
 
     def parse_fuels(self, fuels) -> list[Fuel]:

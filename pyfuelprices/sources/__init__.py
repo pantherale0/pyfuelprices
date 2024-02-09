@@ -119,7 +119,7 @@ class Source:
         _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
         self._configured_areas=[] if areas is None else areas
         self._clear_cache()
-        if datetime.now() > self.next_update:
+        if self.next_update <= datetime.now():
             response = await self._client_session.request(
                 method=self._method,
                 url=self._url,
@@ -129,7 +129,7 @@ class Source:
             _LOGGER.debug("Update request completed for %s with status %s",
                         self.provider_name, response.status)
             if response.status == 200:
-                self.next_update += self.update_interval
+                self.next_update = datetime.now() + self.update_interval
                 if "application/json" not in response.content_type:
                     return await self.parse_response(
                         response=json.loads(await response.text())
