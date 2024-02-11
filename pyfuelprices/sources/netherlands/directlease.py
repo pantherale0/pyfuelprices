@@ -16,7 +16,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
     ANDROID_USER_AGENT
 )
-from pyfuelprices.sources import Source
+from pyfuelprices.sources import ServiceBlocked, Source, UpdateFailedError
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 
 from .const import DIRECTLEASE_API_PLACES, DIRECTLEASE_API_STATION
@@ -81,11 +81,18 @@ class DirectLeaseFuelLocation(FuelLocation):
 
     async def dynamic_build_fuels(self):
         """Dynamic requests to build fuels."""
+        _LOGGER.debug("Update requested for station %s", self._id)
         if (len(self.available_fuels) != 0 and self.next_update > datetime.now()):
+            _LOGGER.debug("Update skipped, next update required at %s, current fuel count %s",
+                          self.next_update,
+                          len(self.available_fuels))
             return None
+
         request_url = DIRECTLEASE_API_STATION.format(
             station_id=self.props[PROP_FUEL_LOCATION_SOURCE_ID]
         )
+
+        _LOGGER.debug("Requesting fuel prices for station %s (%s)", self._id, request_url)
 
         try:
             async with self._client_session.request(
@@ -137,9 +144,18 @@ class DirectLeaseFuelLocation(FuelLocation):
                                         props={}
                                     )
                                 )
-            self.next_update = datetime.now()+timedelta(
+                elif response.status == 403:
+                    # 403 for directlease is an IP block
+                    _LOGGER.error(
+                        ("DirectLease appears to have blocked your IP. Your options are:"
+                        "1) Contact tankservice-block@app-it-up.com for further support. "
+                        "2) Change your WAN IP address or use a VPN. "
+                        "3) Use a proxy server to connect. "))
+
+            self.next_update = datetime.now() + timedelta(
             days=1,
-            minutes=random.randint(1,30)) # prevent overloading the API and false DDoS flags
+            minutes=random.randint(1,240),
+            seconds=random.randint(1,60)) # prevent overloading the API and IP lockouts
 
         except aiohttp.ServerDisconnectedError as err:
             _LOGGER.warning("Error sending request to URL %s: %s",
@@ -158,6 +174,24 @@ class DirectLeaseTankServiceParser(Source):
     async def get_site(self, site_id) -> FuelLocation:
         await self.location_cache[site_id].dynamic_build_fuels()
         return self.location_cache[site_id]
+
+    async def update(self, areas=None) -> list[FuelLocation]:
+        try:
+            await super().update(areas)
+        except UpdateFailedError as err:
+            if err.status == 403:
+                # 403 for directlease is an IP block
+                _LOGGER.error(("DirectLease appears to have blocked your IP. Your options are:"
+                                "1) Contact tankservice-block@app-it-up.com for further support. "
+                                "2) Change your WAN IP address or use a VPN. "
+                                "3) Use a proxy server to connect. "))
+                raise ServiceBlocked(err.status, err.response, err.headers) from err
+
+        self.next_update = datetime.now() + timedelta(
+            days=1,
+            minutes=random.randint(1,240),
+            seconds=random.randint(1,60)) # prevent overloading the API and IP lockouts
+        return list(self.location_cache.values())
 
     async def parse_response(self, response) -> list[DirectLeaseFuelLocation]:
         """Fuel location parser for DirectLease."""

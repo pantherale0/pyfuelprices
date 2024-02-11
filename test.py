@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["essouk"],
+        enabled_sources=["directlease"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -40,7 +40,7 @@ async def main():
                 PROP_AREA_RADIUS: 25.0 # austria
             }
         ],
-        update_interval=timedelta(days=1)
+        update_interval=timedelta(minutes=2)
     )
     while True:
         await data.update()

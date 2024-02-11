@@ -59,7 +59,6 @@ class Source:
     next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
-    # location_tree: KDTree
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1),
@@ -173,3 +172,6 @@ class UpdateFailedError(Exception):
         self.status = status
         self.response = response
         self.headers = headers
+
+class ServiceBlocked(UpdateFailedError):
+    """Service Blocked exception."""
