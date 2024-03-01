@@ -65,10 +65,7 @@ class Source:
                  client_session: aiohttp.ClientSession = None) -> None:
         """Start a new instance of a source."""
         self.update_interval = update_interval
-        self._client_session: aiohttp.ClientSession = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=self._timeout),
-            headers=self._headers
-        )
+        self._client_session: aiohttp.ClientSession = client_session
         if client_session is None:
             self._client_session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=self._timeout)
