@@ -22,16 +22,18 @@ class FuelPrices:
     _accessed_sites: dict[str, str] = {}
     client_session: aiohttp.ClientSession = None
 
-    async def update(self):
+    async def update(self, force: bool=False):
         """Main data fetch / update handler."""
-        async def update_src(s: Source, a: list[dict]):
+        async def update_src(s: Source, a: list[dict], f: bool):
             """Update source."""
             try:
                 async with asyncio.Semaphore(4):
-                    await s.update(areas=a)
+                    await s.update(areas=a, force=f)
             except TimeoutError as err:
                 _LOGGER.warning("Timeout updating %s: %s", s.provider_name, err)
-        coros = [update_src(s, self.configured_areas) for s in self.configured_sources.values()]
+        coros = [
+            update_src(s, self.configured_areas, force) for s in self.configured_sources.values()
+        ]
         await asyncio.gather(*coros)
 
     async def get_fuel_location(self, site_id: str, source_id: str) -> FuelLocation:

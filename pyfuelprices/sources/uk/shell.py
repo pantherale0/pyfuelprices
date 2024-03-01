@@ -23,9 +23,9 @@ class ShellUKSource(CMAParser):
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=False) -> list[FuelLocation]:
         """Update hooks for the data source."""
-        if datetime.now() > self.next_update:
+        if datetime.now() > self.next_update or force:
             _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
             async with self._client_session.request(
                 url=self._url,

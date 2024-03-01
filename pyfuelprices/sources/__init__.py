@@ -110,12 +110,12 @@ class Source:
                 )
         return locations
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=False) -> list[FuelLocation]:
         """Update hooks for the data source."""
         _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
         self._configured_areas=[] if areas is None else areas
         self._clear_cache()
-        if self.next_update <= datetime.now():
+        if self.next_update <= datetime.now() or force:
             response = await self._client_session.request(
                 method=self._method,
                 url=self._url,
