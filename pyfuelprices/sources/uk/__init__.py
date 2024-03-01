@@ -47,9 +47,11 @@ class CMAParser(Source):
         for f_type in fuels:
             if fuels[f_type] is not None:
                 if fuels[f_type] > 10000:
-                    fuels[f_type] = fuels[f_type]/100
+                    fuels[f_type] = round(fuels[f_type]/100, 1)
                 if fuels[f_type] > 1000:
-                    fuels[f_type] = fuels[f_type]/10
+                    fuels[f_type] = round(fuels[f_type]/10, 1)
+                if fuels[f_type] < 100:
+                    fuels[f_type] = round(fuels[f_type]*100, 1)
             f_list.append(Fuel(
                 fuel_type=f_type,
                 cost=fuels[f_type],

@@ -15,14 +15,3 @@ class BpUKSource(CMAParser):
     _timeout = 60
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
-
-    def parse_fuels(self, fuels) -> list[Fuel]:
-        """Parses fuel data."""
-        f_list = []
-        for f_type in fuels:
-            f_list.append(Fuel(
-                fuel_type=f_type,
-                cost=round(fuels[f_type]*100, 1),
-                props={}
-            ))
-        return f_list
