@@ -45,6 +45,10 @@ class CMAParser(Source):
         """Parses fuel data."""
         f_list = []
         for f_type in fuels:
+            if fuels[f_type] > 10000:
+                fuels[f_type] = fuels[f_type]/100
+            if fuels[f_type] > 1000:
+                fuels[f_type] = fuels[f_type]/10
             f_list.append(Fuel(
                 fuel_type=f_type,
                 cost=fuels[f_type],
