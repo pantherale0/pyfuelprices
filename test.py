@@ -12,32 +12,12 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["jet"],
+        enabled_sources=["comparis"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
-                PROP_AREA_LAT: 52.23817,
-                PROP_AREA_LONG: 6.58763
-            },
-            {
-                PROP_AREA_LAT: 38.906316,
-                PROP_AREA_LONG: -77.054750,
-                PROP_AREA_RADIUS: 5. # US
-            },
-            {
-                PROP_AREA_LAT: 53.068464,
-                PROP_AREA_LONG: 12.532709,
-                PROP_AREA_RADIUS: 5.0
-            },
-            {
-                PROP_AREA_LAT: -31.99432700,
-                PROP_AREA_LONG: 115.93068100,
-                PROP_AREA_RADIUS: 5.0
-            },
-            {
-                PROP_AREA_LAT: 48.5140105,
-                PROP_AREA_LONG: 14.5043854,
-                PROP_AREA_RADIUS: 25.0 # austria
+                PROP_AREA_LAT: 47.042277,
+                PROP_AREA_LONG: 9.068475
             }
         ],
         update_interval=timedelta(minutes=2)
@@ -50,12 +30,12 @@ async def main():
         # ):
         #     _LOGGER.info("Found location: %s", loc)
 
-        # _LOGGER.info("TankerKoenig DE test...")
-        # for loc in await data.find_fuel_locations_from_point(
-        #     coordinates=(53.068464, 12.532709),
-        #     radius=5.0
-        # ):
-        #     _LOGGER.info("Found location: %s", loc)
+        _LOGGER.info("Comparis CH test...")
+        for loc in await data.find_fuel_locations_from_point(
+            coordinates=(47.042277, 9.068475),
+            radius=5.0
+        ):
+            _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("FuelWatch AU test...")
         # for loc in await data.find_fuel_locations_from_point(
