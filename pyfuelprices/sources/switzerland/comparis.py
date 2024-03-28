@@ -99,7 +99,12 @@ class ComparisSource(Source):
         """Parse a single raw instance of a fuel site."""
         site_id = f"{self.provider_name}_{station['id']}"
         _LOGGER.debug("Parsing Comparis location ID %s", site_id)
-        plz_pattern = r'\d{4}'  # Pattern to match any sequence of digits
+        plz_pattern = r'\d{4}'
+        match = re.search(plz_pattern, station["formattedAddress"])
+        if match:
+            postal_code = match.group()
+        else:
+            postal_code = None
         loc = FuelLocation.create(
             site_id=site_id,
             name=station["displayName"],
@@ -108,7 +113,7 @@ class ComparisSource(Source):
             long=station["location"]["lng"],
             brand=station["brand"],
             available_fuels=self.parse_fuels(station["fuelCollection"]),
-            postal_code=re.search(plz_pattern, station["formattedAddress"]),
+            postal_code=postal_code,
             currency="CHF",
             props={
                 PROP_FUEL_LOCATION_SOURCE: self.provider_name,
