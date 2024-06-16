@@ -16,7 +16,6 @@ with open('pyfuelprices/_version.py', 'r', encoding='utf8') as version_file:
 REQUIREMENTS = [
     # 'numpy == 1.26.0',
     # 'scikit-learn == 1.3.0',
-    'reverse-geocode == 1.6',
     'these-united-states == 1.1.0.21',
     'geopy == 2.4.0',
 ]
