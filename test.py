@@ -44,11 +44,11 @@ async def main():
     )
     while True:
         await data.update()
-        # for loc in await data.find_fuel_locations_from_point(
-        #     coordinates=(52.570419, 1.115850),
-        #     radius=25.0
-        # ):
-        #     _LOGGER.info("Found location: %s", loc)
+        for loc in await data.find_fuel_locations_from_point(
+            coordinates=(52.570419, 1.115850),
+            radius=25.0
+        ):
+            _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("TankerKoenig DE test...")
         # for loc in await data.find_fuel_locations_from_point(
