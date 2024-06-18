@@ -96,7 +96,7 @@ class FuelWatchSource(Source):
                 )
             )
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler to look all products."""
         # _df_columns = ["lat", "long"]
         # _df_data = []
