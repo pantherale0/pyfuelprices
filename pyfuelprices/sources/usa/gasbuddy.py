@@ -96,7 +96,7 @@ class GasBuddyUSASource(Source):
                 })
         return locations
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query GasBuddy on areas."""
         self._configured_areas=[] if areas is None else areas
         for area in self._configured_areas:
