@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["jet"],
+        enabled_sources=["pecoonline"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -44,11 +44,11 @@ async def main():
     )
     while True:
         await data.update()
-        for loc in await data.find_fuel_locations_from_point(
-            coordinates=(52.570419, 1.115850),
-            radius=25.0
-        ):
-            _LOGGER.info("Found location: %s", loc)
+        # for loc in await data.find_fuel_locations_from_point(
+        #     coordinates=(52.570419, 1.115850),
+        #     radius=25.0
+        # ):
+        #     _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("TankerKoenig DE test...")
         # for loc in await data.find_fuel_locations_from_point(

@@ -1,15 +1,15 @@
 """Netherlands data const."""
 
-API_BASE = "https://pg-app-hnf14cfy2xb2v9x9eueuchcd2xyetd.scalabl.cloud/"
+API_BASE = "https://pg-app-hnf14cfy2xb2v9x9eueuchcd2xyetd.scalabl.cloud"
 
 PECO_ONLINE_API = f"{API_BASE}/1/classes/farapret3"
 PECO_APP_ID = "YueWcf0orjSz3IQmaT8yBNDTM5POP0mOU6EDyE3U"
 PECO_APP_CLIENT_KEY = "ctPx9Ahrz9aaXhEvN0oWCzlX8FHX1cv3r7vZwxH8"
 
 USER_AGENT = "Parse Android SDK API Level 34"
-X_PARSE_OS_VERSION = 14
-X_PARSE_APP_DISPLAY_VERSION = 4.0
-X_PARSE_APP_BUILD_VERSION = 69
+X_PARSE_OS_VERSION = "14"
+X_PARSE_APP_DISPLAY_VERSION = "4.0"
+X_PARSE_APP_BUILD_VERSION = "69"
 
 PECO_STANDARD_HEADERS = {
     "X-Parse-Application-Id": PECO_APP_ID,

@@ -67,7 +67,7 @@ class PecoOnlineSource(Source):
 
     async def parse_raw_fuel_station(self, station: dict) -> FuelLocation:
         """Parse a single raw fuel station into FuelLocation."""
-        site_id = f"{self.provider_name}_{station['Id']}"
+        site_id = f"{self.provider_name}_{station['objectId']}"
         loc = FuelLocation.create(
             site_id=site_id,
             name=station["Statie"],
@@ -76,8 +76,9 @@ class PecoOnlineSource(Source):
             long=station["lng"],
             brand=station["Retea"],
             postal_code="See address",
-            available_fuels=[],
-            currency="RON"
+            available_fuels=self.parse_fuels(station),
+            currency="RON",
+            props={}
         )
         if site_id not in self.location_cache:
             self.location_cache[site_id] = loc
@@ -87,6 +88,9 @@ class PecoOnlineSource(Source):
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Convert fuel stations into fuel objects."""
+        for result in response["results"]:
+            _LOGGER.debug("Parsing object %s", result["objectId"])
+            await self.parse_raw_fuel_station(result)
 
     def parse_fuels(self, fuels: dict) -> list[Fuel]:
         """Parse fuels using mapping"""
