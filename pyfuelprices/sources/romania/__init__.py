@@ -1,3 +1,5 @@
 """Romania Fuel Sources and parsers."""
 
-SOURCE_MAP = {"pecoonline": None}
+from .pecoonline import PecoOnlineSource
+
+SOURCE_MAP = {"pecoonline": PecoOnlineSource}
