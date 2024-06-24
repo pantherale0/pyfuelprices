@@ -1,6 +1,7 @@
 """FuelGR Service for Greece."""
 
 import logging
+import asyncio
 
 from datetime import timedelta, datetime
 
@@ -78,10 +79,7 @@ class FuelGrSource(Source):
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Update the cached data."""
         if self.next_update <= datetime.now() or force:
-            if len(self._configured_areas) != 0:
-                self._configured_areas.extend(areas)
-            else:
-                self._configured_areas = areas
+            self._configured_areas=[] if areas is None else areas
             try:
                 for area in self._configured_areas:
                     try:
@@ -140,6 +138,7 @@ class FuelGrSource(Source):
 
     async def parse_raw_fuel_station(self, station: dict) -> FuelLocation:
         """Parse a single raw fuel station into FuelLocation."""
+        _LOGGER.debug("Parsing object %s", station["@guid"])
         site_id = f"{self.provider_name}_{station['@id']}"
         loc = FuelLocation.create(
             site_id=site_id,
@@ -169,9 +168,8 @@ class FuelGrSource(Source):
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Convert fuel stations into fuel objects."""
-        for result in response:
-            _LOGGER.debug("Parsing object %s", result["@guid"])
-            await self.parse_raw_fuel_station(result)
+        coros = [self.parse_raw_fuel_station(s) for s in response]
+        await asyncio.gather(*coros)
 
     def parse_fuels(self, fuels: dict) -> list[Fuel]:
         """Parse fuels using mapping"""
@@ -180,7 +178,7 @@ class FuelGrSource(Source):
             fuel_resp.append(
                 Fuel(
                     fuel_type=FUELGR_FUEL_TYPE_MAPPING.get(f["@type"], f["fn"]),
-                    cost=f["pr"],
+                    cost=float(f["pr"]),
                     props=f
                 )
             )

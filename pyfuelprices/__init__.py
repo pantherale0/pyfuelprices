@@ -99,7 +99,7 @@ class FuelPrices:
                     loc["available_fuels"][fuel] > 0
                 ):
                     fuels.append({
-                        "name": loc["name"],
+                        **loc,
                         "cost": loc["available_fuels"][fuel],
                         "distance": loc["distance"]
                     })

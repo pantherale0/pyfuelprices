@@ -40,12 +40,12 @@ async def main():
                 PROP_AREA_RADIUS: 25.0 # austria
             },
             {
-                PROP_AREA_LAT: 39.02840696261996,
-                PROP_AREA_LONG: 22.86463189870119,
+                PROP_AREA_LAT: 39.2062720,
+                PROP_AREA_LONG: 22.2513570,
                 PROP_AREA_RADIUS: 5.0 # Greece
             }
         ],
-        update_interval=timedelta(minutes=2)
+        update_interval=timedelta(minutes=5)
     )
     while True:
         await data.update()
@@ -106,6 +106,12 @@ async def main():
         #     radius=25.0,
         #     fuel_type="B7"
         # ))
+
+        _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
+            coordinates=(39.2062720, 22.2513570),
+            radius=30.0,
+            fuel_type="95"
+        ))
 
         await asyncio.sleep(15)
 

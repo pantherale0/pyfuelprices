@@ -24,27 +24,27 @@ FUELGR_GET_STATION_PRICES = (
 )
 
 FUELGR_FUEL_TYPE_MAPPING = {
-    1: "95",
-    2: "98-100",
-    3: "Super",
-    4: "Diesel",
-    5: "Heating Diesel",
-    6: "LPG",
-    7: "Home Heating Diesel",
-    8: "CNG"
+    "1": "95",
+    "2": "98-100",
+    "3": "Super",
+    "4": "Diesel",
+    "5": "Heating Diesel",
+    "6": "LPG",
+    "7": "Home Heating Diesel",
+    "8": "CNG"
 }
 
 FUELGR_BRAND_MAPPING = {
-    0: "ALL",
-    1: "ΑΝΕΞΑΡΤΗΤΟ ΠΡΑΤΗΡΙΟ",
-    2: "JETOIL",
-    3: "SHELL",
-    5: "ETEKA",
-    6: "AVIN",
-    8: "EKO",
-    9: "REVOIL",
-    10: "BP",
-    11: "ΕΛΙΝΟΙΛ",
-    13: "CYCLON",
-    17: "KAOIL"
+    "0": "ALL",
+    "1": "ΑΝΕΞΑΡΤΗΤΟ ΠΡΑΤΗΡΙΟ",
+    "2": "JETOIL",
+    "3": "SHELL",
+    "5": "ETEKA",
+    "6": "AVIN",
+    "8": "EKO",
+    "9": "REVOIL",
+    "10": "BP",
+    "11": "ΕΛΙΝΟΙΛ",
+    "13": "CYCLON",
+    "17": "KAOIL"
 }
