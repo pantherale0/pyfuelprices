@@ -1,8 +1,11 @@
 """FuelGR Service for Greece."""
 
 import logging
-import xmltodict
+
 from datetime import timedelta, datetime
+
+import xmltodict
+from geopy import distance
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -46,10 +49,39 @@ class FuelGrSource(Source):
         """Return a single site."""
         return self.location_cache[site_id]
 
+    async def search_sites(self, coordinates, radius: float) -> list[dict]:
+        """Return all available sites (radius not used)"""
+        # first query the API to populate the cache / update data
+        await self.update(
+            areas=[
+                {
+                    PROP_AREA_LAT: coordinates[0],
+                    PROP_AREA_LONG: coordinates[1]
+                }
+            ],
+            force=True
+        )
+        locations = []
+        for site in self.location_cache.values():
+            dist = distance.distance(coordinates,
+                                 (
+                                    site.lat,
+                                    site.long
+                                )).miles
+            if dist < radius:
+                locations.append({
+                    **site.__dict__(),
+                    "distance": dist
+                })
+        return locations
+
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Update the cached data."""
         if self.next_update <= datetime.now() or force:
-            self._configured_areas=[] if areas is None else areas
+            if len(self._configured_areas) != 0:
+                self._configured_areas.extend(areas)
+            else:
+                self._configured_areas = areas
             try:
                 for area in self._configured_areas:
                     try:
