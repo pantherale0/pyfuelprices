@@ -53,14 +53,11 @@ class FuelGrSource(Source):
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites (radius not used)"""
         # first query the API to populate the cache / update data
-        await self.update(
-            areas=[
-                {
-                    PROP_AREA_LAT: coordinates[0],
-                    PROP_AREA_LONG: coordinates[1]
-                }
-            ],
-            force=True
+        await self.update_area(
+            {
+                PROP_AREA_LAT: coordinates[0],
+                PROP_AREA_LONG: coordinates[1]
+            }
         )
         locations = []
         for site in self.location_cache.values():
@@ -76,46 +73,51 @@ class FuelGrSource(Source):
                 })
         return locations
 
+    async def update_area(self, area: dict):
+        """Used by asyncio to update areas."""
+        try:
+            geocode = await geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return None
+        if geocode.raw["address"]["country_code"] != "gr":
+            _LOGGER.debug("Skipping area %s as not in GR.",
+                        area)
+            return None
+        self._parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+        _LOGGER.debug("Searching FuelGR for FuelLocations at area %s",
+                    area)
+        response_raw = await self._send_request(
+            url=FUELGR_GET_DATA.format(
+                LAT=area[PROP_AREA_LAT],
+                LONG=area[PROP_AREA_LONG],
+                FUEL="1",
+                BRAND="0",
+                QUALITY="0"
+            )
+        )
+        # convert to dict
+        response_raw = xmltodict.parse(response_raw)
+        # now extract fuel stations
+        response_raw = response_raw["gss"]["gs"]
+        _LOGGER.debug("Found %s fuel stations",
+                    len(response_raw))
+        
+        await self.parse_response(
+            response=response_raw
+        )
+
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Update the cached data."""
         if self.next_update <= datetime.now() or force:
             self._configured_areas=[] if areas is None else areas
             try:
-                for area in self._configured_areas:
-                    try:
-                        geocode = await geocode_reverse_lookup(
-                            (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                        )
-                    except geopyexc.GeocoderTimedOut:
-                        _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                        area)
-                        continue
-                    if geocode.raw["address"]["country_code"] != "gr":
-                        _LOGGER.debug("Skipping area %s as not in GR.",
-                                    area)
-                        continue
-                    self._parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    _LOGGER.debug("Searching FuelGR for FuelLocations at area %s",
-                                area)
-                    response_raw = await self._send_request(
-                        url=FUELGR_GET_DATA.format(
-                            LAT=area[PROP_AREA_LAT],
-                            LONG=area[PROP_AREA_LONG],
-                            FUEL="1",
-                            BRAND="0",
-                            QUALITY="0"
-                        )
-                    )
-                    # convert to dict
-                    response_raw = xmltodict.parse(response_raw)
-                    # now extract fuel stations
-                    response_raw = response_raw["gss"]["gs"]
-                    _LOGGER.debug("Found %s fuel stations",
-                                len(response_raw))
-                    self.next_update += self.update_interval
-                    await self.parse_response(
-                        response=response_raw
-                    )
+                self.next_update += self.update_interval
+                coros = [self.update_area(a) for a in self._configured_areas]
+                asyncio.gather(*coros)
             except Exception as exc:
                 _LOGGER.error(exc)
 
