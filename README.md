@@ -34,6 +34,7 @@ Sources used to provide data for this module include:
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
 - DE: TankerKoenig (https://tankerkoenig.de/)
 - GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
+- GR: FuelGR (https://fuelgr.gr/)
 - NL: DirectLease TankService (https://directlease.nl/tankservice/)
 - RO: Peco-Online (https://www.peco-online.ro/)
 - US: GasBuddy (https://www.gasbuddy.com/)

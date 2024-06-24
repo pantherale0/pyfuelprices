@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["pecoonline"],
+        enabled_sources=["fuelgr"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -38,6 +38,11 @@ async def main():
                 PROP_AREA_LAT: 48.5140105,
                 PROP_AREA_LONG: 14.5043854,
                 PROP_AREA_RADIUS: 25.0 # austria
+            },
+            {
+                PROP_AREA_LAT: 39.02840696261996,
+                PROP_AREA_LONG: 22.86463189870119,
+                PROP_AREA_RADIUS: 5.0 # Greece
             }
         ],
         update_interval=timedelta(minutes=2)
