@@ -5,6 +5,11 @@ import uuid
 import json
 from datetime import timedelta
 
+from pyfuelprices.const import (
+    PROP_FUEL_LOCATION_SOURCE,
+    PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
+    PROP_FUEL_LOCATION_SOURCE_ID
+)
 from pyfuelprices.sources import Source
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 
@@ -78,7 +83,11 @@ class PecoOnlineSource(Source):
             postal_code="See address",
             available_fuels=self.parse_fuels(station),
             currency="RON",
-            props={}
+            props={
+                PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP: True,
+                PROP_FUEL_LOCATION_SOURCE: self.provider_name,
+                PROP_FUEL_LOCATION_SOURCE_ID: station['objectId']
+            }
         )
         if site_id not in self.location_cache:
             self.location_cache[site_id] = loc
