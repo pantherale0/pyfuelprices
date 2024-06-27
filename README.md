@@ -29,7 +29,7 @@ TODO
 
 Sources used to provide data for this module include:
 
-- AU: FuelWatch (https://www.fuelwatch.wa.gov.au)
+- AU: FuelWatch (https://www.fuelwatch.wa.gov.au) and FuelSnoop (https://www.fuelsnoop.com.au/)
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
 - DE: TankerKoenig (https://tankerkoenig.de/)
