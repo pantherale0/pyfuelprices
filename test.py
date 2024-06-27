@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["fuelgr"],
+        enabled_sources=["fuelsnoop"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -43,6 +43,11 @@ async def main():
                 PROP_AREA_LAT: 39.2062720,
                 PROP_AREA_LONG: 22.2513570,
                 PROP_AREA_RADIUS: 5.0 # Greece
+            },
+            {
+                PROP_AREA_LAT: -27.470750,
+                PROP_AREA_LONG: 153.036804,
+                PROP_AREA_RADIUS: 15.0 # AUS (FuelSnoop)
             }
         ],
         update_interval=timedelta(minutes=5)
@@ -105,13 +110,19 @@ async def main():
         #     coordinates=(52.570419, 1.115850),
         #     radius=25.0,
         #     fuel_type="B7"
-        # ))
+        # )) #UK
+
+        # _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
+        #     coordinates=(39.2062720, 22.2513570),
+        #     radius=30.0,
+        #     fuel_type="95"
+        # )) #GR
 
         _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
-            coordinates=(39.2062720, 22.2513570),
-            radius=30.0,
-            fuel_type="95"
-        ))
+            coordinates=(-27.470750, 153.036804),
+            radius=20.0,
+            fuel_type="DSL"
+        )) #AUS (FuelSnoop)
 
         await asyncio.sleep(15)
 

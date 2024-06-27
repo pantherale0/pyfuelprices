@@ -12,16 +12,11 @@ from pyfuelprices.const import (
     DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.sources import Source #, pd, KDTree
+from pyfuelprices.sources import Source
+
+from .const import FUELWATCH_API_PRODUCTS, FUELWATCH_API_SITES
 
 _LOGGER = logging.getLogger(__name__)
-
-CONST_FUELWATCH_API_BASE = "https://www.fuelwatch.wa.gov.au/api/"
-CONST_FUELWATCH_API_PRODUCTS = f"{CONST_FUELWATCH_API_BASE}products"
-CONST_FUELWATCH_API_SITES = (
-    f"{CONST_FUELWATCH_API_BASE}sites"
-    "?fuelType={FUELTYPE}"
-)
 
 class FuelWatchSource(Source):
     """FuelWatch data source."""
@@ -46,7 +41,7 @@ class FuelWatchSource(Source):
 
     async def get_fuel_products(self):
         """Retrieves available fuel products."""
-        response_raw = await self._send_request(CONST_FUELWATCH_API_PRODUCTS)
+        response_raw = await self._send_request(FUELWATCH_API_PRODUCTS)
         for product in json.loads(response_raw):
             if product["shortName"] not in self._fuel_products:
                 self._fuel_products.append(product["shortName"])
@@ -104,7 +99,7 @@ class FuelWatchSource(Source):
             if len(self._fuel_products) == 0:
                 await self.get_fuel_products()
             for product in self._fuel_products:
-                url = CONST_FUELWATCH_API_SITES.format(
+                url = FUELWATCH_API_SITES.format(
                     FUELTYPE=product
                 )
                 response_raw = json.loads(await self._send_request(url))
