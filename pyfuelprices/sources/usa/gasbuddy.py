@@ -3,8 +3,6 @@ import logging
 import json
 import uuid
 
-# use these-united-states for geocoding to states
-import united_states
 from geopy import distance
 
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
@@ -18,6 +16,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
     ANDROID_USER_AGENT
 )
+from pyfuelprices.helpers import geocode_reverse_lookup
 from pyfuelprices.sources import Source
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONST_GASBUDDY_STATIONS_FMT = (
     "https://services.gasbuddy.com/mobile-orchestration/stations?authid={AUTHID}"
     "&country={COUNTRY}&distance_format={DISTANCEFMT}&limit={LIMIT}&region={STATE}"
-    "&lat={LAT}&lng={LONG}"
+    "&lat={LAT}&lng={LONG}&locality={LOC}"
 )
 CONST_GASBUDDY_GET_STATION_FMT = (
     "https://services.gasbuddy.com/mobile-orchestration/stations/{STATIONID}"
@@ -39,7 +38,6 @@ class GasBuddyUSASource(Source):
         "apikey": "56c57e8f1132465d817d6a753c59387e",
         "User-Agent": ANDROID_USER_AGENT
     }
-    _usa = united_states.UnitedStates()
     _parser_radius = 0
     _parser_coords = ()
     provider_name = "gasbuddy"
@@ -102,26 +100,30 @@ class GasBuddyUSASource(Source):
         for area in self._configured_areas:
             self._parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
             self._parser_radius = area[PROP_AREA_RADIUS]
-            coord_data = self._usa.from_coords(
-                lat=area[PROP_AREA_LAT],
-                lon=area[PROP_AREA_LONG]
-            )
-            if len(coord_data) > 0:
-                _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
-                              area)
-                coord_data = coord_data[0]
-                response_raw = await self._send_request(
-                    url=CONST_GASBUDDY_STATIONS_FMT.format(
-                        AUTHID=str(uuid.uuid4()),
-                        COUNTRY="US",
-                        DISTANCEFMT="auto",
-                        LIMIT=1000,
-                        STATE=coord_data.abbr,
-                        LAT=area[PROP_AREA_LAT],
-                        LONG=area[PROP_AREA_LONG]
-                    )
+            geocoded = await geocode_reverse_lookup(self._parser_coords)
+            if geocoded is None:
+                _LOGGER.debug("Geocode failed, skipping area %s", area)
+                continue
+            if geocoded.raw["address"]["country_code"] != "us":
+                _LOGGER.debug("Geocode not within USA, skipping area %s", area)
+                continue
+            _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
+                            area)
+            if "village" not in geocoded.raw["address"].keys():
+                geocoded.raw["address"]["village"] = ""
+            response_raw = await self._send_request(
+                url=CONST_GASBUDDY_STATIONS_FMT.format(
+                    AUTHID=str(uuid.uuid4()),
+                    COUNTRY="US",
+                    DISTANCEFMT="auto",
+                    LIMIT=1000,
+                    STATE=geocoded.raw["address"]["ISO3166-2-lvl4"].replace("US-", ""),
+                    LAT=area[PROP_AREA_LAT],
+                    LONG=area[PROP_AREA_LONG],
+                    LOC=geocoded.raw["address"]["village"]
                 )
-                await self.parse_response(json.loads(response_raw))
+            )
+            await self.parse_response(json.loads(response_raw))
         return list(self.location_cache.values())
 
     async def parse_raw_fuel_station(self, station) -> FuelLocation:
