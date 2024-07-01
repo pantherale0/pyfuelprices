@@ -32,6 +32,7 @@ Sources used to provide data for this module include:
 - AU: FuelWatch (https://www.fuelwatch.wa.gov.au), FuelSnoop (https://www.fuelsnoop.com.au/) and PetrolSpy (https://petrolspy.com.au)
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
+- CA: GasBuddy (https://www.gasbuddy.com/) - Use US data source below to access.
 - DE: TankerKoenig (https://tankerkoenig.de/)
 - GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
 - GR: FuelGR (https://fuelgr.gr/)

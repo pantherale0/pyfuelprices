@@ -22,6 +22,7 @@ SOURCE_MAP = {
 
 COUNTRY_MAP = {
     "BE": ["directlease"],
+    "CA": ["gasbuddy"],
     "DE": [k for k in DE_SOURCE_MAP],
     "NL": [k for k in NL_SOURCE_MAP],
     "NZ": ["petrolspy"],
