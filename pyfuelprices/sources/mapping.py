@@ -24,6 +24,7 @@ COUNTRY_MAP = {
     "BE": ["directlease"],
     "DE": [k for k in DE_SOURCE_MAP],
     "NL": [k for k in NL_SOURCE_MAP],
+    "NZ": ["petrolspy"],
     "GB": [k for k in UK_SOURCE_MAP],
     "US": [k for k in US_SOURCE_MAP],
     "AU": [k for k in AU_SOURCE_MAP],

@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["gasbuddy"],
+        enabled_sources=["petrolspy"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -53,6 +53,11 @@ async def main():
                 PROP_AREA_LAT: -27.470750,
                 PROP_AREA_LONG: 153.036804,
                 PROP_AREA_RADIUS: 15.0 # AUS (FuelSnoop)
+            },
+            {
+                PROP_AREA_LAT: -36.975624329980654,
+                PROP_AREA_LONG: 174.78417701477935,
+                PROP_AREA_RADIUS: 15.0 # NZ (PetrolSpy)
             }
         ],
         update_interval=timedelta(minutes=5)

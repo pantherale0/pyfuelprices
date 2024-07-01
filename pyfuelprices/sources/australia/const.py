@@ -1,5 +1,7 @@
 """AUS Fuel Data Consts."""
 
+from pyfuelprices.const import DESKTOP_USER_AGENT
+
 FUELWATCH_API_BASE = "https://www.fuelwatch.wa.gov.au/api/"
 FUELWATCH_API_PRODUCTS = f"{FUELWATCH_API_BASE}products"
 FUELWATCH_API_SITES = (
@@ -17,7 +19,7 @@ FUELSNOOP_API_API_TOKEN = (
     "NlqFyVJPoYre2fYzN0E"
 )
 FUELSNOOP_API_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0",
+    "User-Agent": DESKTOP_USER_AGENT,
     "Accept": "application/json",
     "Accept-Language": "en-GB,en;q=0.5",
     "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -37,3 +39,20 @@ FUELSNOOP_API_HEADERS = {
     "TE": "trailers"
 }
 FUELSNOOP_API_SITES = f"{FUELSNOOP_API_BASE}sites_in_view"
+
+PETROLSPY_API_BASE = "https://petrolspy.com.au/webservice-1/"
+PETROLSPY_API_HEADERS = {
+    "User-Agent": DESKTOP_USER_AGENT,
+    "Accept": "application/json",
+    "Referer": "https://petrolspy.com.au/",
+    "x-ps-fp": "06999ae0c2fa02880528b0a549374286",
+    "X-Requested-With": "XMLHttpRequest"
+}
+PETROLSPY_API_SITES = (
+    f"{PETROLSPY_API_BASE}"
+    "station/box?"
+    "neLat={LAT_MAX}"
+    "&neLng={LNG_MAX}"
+    "&swLat={LAT_MIN}"
+    "&swLng={LNG_MIN}"
+)

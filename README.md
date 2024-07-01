@@ -29,13 +29,14 @@ TODO
 
 Sources used to provide data for this module include:
 
-- AU: FuelWatch (https://www.fuelwatch.wa.gov.au) and FuelSnoop (https://www.fuelsnoop.com.au/)
+- AU: FuelWatch (https://www.fuelwatch.wa.gov.au), FuelSnoop (https://www.fuelsnoop.com.au/) and PetrolSpy (https://petrolspy.com.au)
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
 - DE: TankerKoenig (https://tankerkoenig.de/)
 - GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
 - GR: FuelGR (https://fuelgr.gr/)
 - NL: DirectLease TankService (https://directlease.nl/tankservice/)
+- NZ: PetrolSpy (https://petrolspy.com.au) - Use Australia fuel source above to access.
 - RO: Peco-Online (https://www.peco-online.ro/)
 - US: GasBuddy (https://www.gasbuddy.com/)
 
