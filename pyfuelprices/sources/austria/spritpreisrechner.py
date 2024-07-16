@@ -102,7 +102,7 @@ class SpripreisrechnerATSource(Source):
             self.next_update + self.update_interval
         )
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler to query each region."""
         if datetime.now() > self.next_update:
             if len(self._regions) == 0:

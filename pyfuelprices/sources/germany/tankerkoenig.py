@@ -56,7 +56,7 @@ class TankerKoenigSource(Source):
                             url,
                             response)
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query TankerKoenig on areas."""
         if datetime.now() > self.next_update:
             self._configured_areas=[] if areas is None else areas

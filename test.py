@@ -12,15 +12,60 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["comparis"],
+        enabled_sources=["gasbuddy"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
-                PROP_AREA_LAT: 47.042277,
-                PROP_AREA_LONG: 9.068475
+                PROP_AREA_LAT: 52.23817,
+                PROP_AREA_LONG: 6.58763
+            },
+            {
+                PROP_AREA_LAT: 49.134068,
+                PROP_AREA_LONG: -122.889980,
+                PROP_AREA_RADIUS: 5.0
+            }, # CA
+            {
+                PROP_AREA_LAT: 38.906316,
+                PROP_AREA_LONG: -77.054750,
+                PROP_AREA_RADIUS: 5.0 # US (No locality)
+            },
+            {
+                PROP_AREA_LAT: 40.157349,
+                PROP_AREA_LONG: -75.217079,
+                PROP_AREA_RADIUS: 5.0 # US (With locality)
+            },
+            {
+                PROP_AREA_LAT: 53.068464,
+                PROP_AREA_LONG: 12.532709,
+                PROP_AREA_RADIUS: 5.0
+            },
+            {
+                PROP_AREA_LAT: -31.99432700,
+                PROP_AREA_LONG: 115.93068100,
+                PROP_AREA_RADIUS: 5.0
+            },
+            {
+                PROP_AREA_LAT: 48.5140105,
+                PROP_AREA_LONG: 14.5043854,
+                PROP_AREA_RADIUS: 25.0 # austria
+            },
+            {
+                PROP_AREA_LAT: 39.2062720,
+                PROP_AREA_LONG: 22.2513570,
+                PROP_AREA_RADIUS: 5.0 # Greece
+            },
+            {
+                PROP_AREA_LAT: -27.470750,
+                PROP_AREA_LONG: 153.036804,
+                PROP_AREA_RADIUS: 15.0 # AUS (FuelSnoop)
+            },
+            {
+                PROP_AREA_LAT: -36.975624329980654,
+                PROP_AREA_LONG: 174.78417701477935,
+                PROP_AREA_RADIUS: 15.0 # NZ (PetrolSpy)
             }
         ],
-        update_interval=timedelta(minutes=2)
+        update_interval=timedelta(minutes=5)
     )
     while True:
         await data.update()
@@ -80,7 +125,19 @@ async def main():
         #     coordinates=(52.570419, 1.115850),
         #     radius=25.0,
         #     fuel_type="B7"
-        # ))
+        # )) #UK
+
+        # _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
+        #     coordinates=(39.2062720, 22.2513570),
+        #     radius=30.0,
+        #     fuel_type="95"
+        # )) #GR
+
+        _LOGGER.info("Fuels test: %s", await data.find_fuel_from_point(
+            coordinates=(-27.470750, 153.036804),
+            radius=20.0,
+            fuel_type="DSL"
+        )) #AUS (FuelSnoop)
 
         await asyncio.sleep(15)
 

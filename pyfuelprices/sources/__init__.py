@@ -12,11 +12,7 @@ from geopy import (
     adapters,
     exc as geopyexc
 )
-# from sklearn.neighbors import KDTree
-
-# import pandas as pd
 import aiohttp
-import reverse_geocode
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -25,24 +21,9 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices._version import __version__ as VERSION
+from pyfuelprices.helpers import geocode_reverse_lookup
 
 _LOGGER = logging.getLogger(__name__)
-
-async def geocode_reverse_lookup(coordinates: tuple) -> location.Location:
-    """Reverse GeoCode lookup."""
-    async with Nominatim(
-        user_agent=f"pyfuelprices-{VERSION}",
-        adapter_factory=adapters.AioHTTPAdapter) as geolocator:
-        return await geolocator.reverse(coordinates, exactly_one=True, timeout=15)
-
-def geocode_country_lookup(coordinates: tuple):
-    """Reverse geocode country lookup using reverse-geocode."""
-    results = reverse_geocode.search(coordinates=[coordinates])
-    if len(results) > 0:
-        return results[0]["country_code"]
-    raise LookupError("Country not found for given coordinates.",
-                      coordinates)
 
 class Source:
     """Base source, all instances inherit this."""

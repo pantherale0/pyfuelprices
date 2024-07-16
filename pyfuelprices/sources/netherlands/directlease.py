@@ -175,7 +175,7 @@ class DirectLeaseTankServiceParser(Source):
         await self.location_cache[site_id].dynamic_build_fuels()
         return self.location_cache[site_id]
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         try:
             await super().update(areas)
         except UpdateFailedError as err:

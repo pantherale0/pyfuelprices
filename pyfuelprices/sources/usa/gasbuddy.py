@@ -3,8 +3,6 @@ import logging
 import json
 import uuid
 
-# use these-united-states for geocoding to states
-import united_states
 from geopy import distance
 
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
@@ -18,14 +16,16 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
     ANDROID_USER_AGENT
 )
+from pyfuelprices.helpers import geocode_reverse_lookup, get_bounding_box
 from pyfuelprices.sources import Source
 
 _LOGGER = logging.getLogger(__name__)
 
 CONST_GASBUDDY_STATIONS_FMT = (
     "https://services.gasbuddy.com/mobile-orchestration/stations?authid={AUTHID}"
-    "&country={COUNTRY}&distance_format={DISTANCEFMT}&limit={LIMIT}&region={STATE}"
+    "&country={COUNTRY}&distance_format={DISTANCEFMT}&limit={LIMIT}"
     "&lat={LAT}&lng={LONG}"
+    "&location_specification={MIN_LAT}%2C{MIN_LON}%2C{MAX_LAT}%2C{MAX_LON}"
 )
 CONST_GASBUDDY_GET_STATION_FMT = (
     "https://services.gasbuddy.com/mobile-orchestration/stations/{STATIONID}"
@@ -39,7 +39,6 @@ class GasBuddyUSASource(Source):
         "apikey": "56c57e8f1132465d817d6a753c59387e",
         "User-Agent": ANDROID_USER_AGENT
     }
-    _usa = united_states.UnitedStates()
     _parser_radius = 0
     _parser_coords = ()
     provider_name = "gasbuddy"
@@ -96,32 +95,39 @@ class GasBuddyUSASource(Source):
                 })
         return locations
 
-    async def update(self, areas=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query GasBuddy on areas."""
         self._configured_areas=[] if areas is None else areas
         for area in self._configured_areas:
             self._parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
             self._parser_radius = area[PROP_AREA_RADIUS]
-            coord_data = self._usa.from_coords(
-                lat=area[PROP_AREA_LAT],
-                lon=area[PROP_AREA_LONG]
-            )
-            if len(coord_data) > 0:
-                _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
-                              area)
-                coord_data = coord_data[0]
-                response_raw = await self._send_request(
-                    url=CONST_GASBUDDY_STATIONS_FMT.format(
-                        AUTHID=str(uuid.uuid4()),
-                        COUNTRY="US",
-                        DISTANCEFMT="auto",
-                        LIMIT=1000,
-                        STATE=coord_data.abbr,
-                        LAT=area[PROP_AREA_LAT],
-                        LONG=area[PROP_AREA_LONG]
-                    )
+            geocoded = await geocode_reverse_lookup(self._parser_coords)
+            if geocoded is None:
+                _LOGGER.debug("Geocode failed, skipping area %s", area)
+                continue
+            if geocoded.raw["address"]["country_code"] not in ["us", "ca"]:
+                _LOGGER.debug("Geocode not within USA, skipping area %s", area)
+                continue
+            _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
+                            area)
+            bbox = get_bounding_box(area[PROP_AREA_LAT],
+                                    area[PROP_AREA_LONG],
+                                    area[PROP_AREA_RADIUS])
+            response_raw = await self._send_request(
+                url=CONST_GASBUDDY_STATIONS_FMT.format(
+                    AUTHID=str(uuid.uuid4()),
+                    COUNTRY="US",
+                    DISTANCEFMT="auto",
+                    LIMIT=1000,
+                    LAT=area[PROP_AREA_LAT],
+                    LONG=area[PROP_AREA_LONG],
+                    MIN_LAT=bbox.lat_min,
+                    MIN_LON=bbox.lon_min,
+                    MAX_LAT=bbox.lat_max,
+                    MAX_LON=bbox.lon_max
                 )
-                await self.parse_response(json.loads(response_raw))
+            )
+            await self.parse_response(json.loads(response_raw))
         return list(self.location_cache.values())
 
     async def parse_raw_fuel_station(self, station) -> FuelLocation:

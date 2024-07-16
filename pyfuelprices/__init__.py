@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import aiohttp
 
-from pyfuelprices.sources import Source, geocode_country_lookup
+from pyfuelprices.sources import Source, geocode_reverse_lookup
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
 from .fuel_locations import FuelLocation
@@ -57,11 +57,11 @@ class FuelPrices:
                 coordinates=coordinates,
                 radius=radius
             )
-        geocoded = geocode_country_lookup(coordinates)
-        if geocoded not in COUNTRY_MAP:
+        geocoded = (await geocode_reverse_lookup(coordinates)).raw['address']['country_code']
+        if geocoded.upper() not in COUNTRY_MAP:
             raise ValueError("No data source exists for the given coordinates.", geocoded)
         locations = []
-        for src in COUNTRY_MAP.get(geocoded, []):
+        for src in COUNTRY_MAP.get(geocoded.upper(), []):
             if src in self.configured_sources:
                 locations.extend(await self.configured_sources[src].search_sites(
                     coordinates=coordinates,
@@ -99,7 +99,7 @@ class FuelPrices:
                     loc["available_fuels"][fuel] > 0
                 ):
                     fuels.append({
-                        "name": loc["name"],
+                        **loc,
                         "cost": loc["available_fuels"][fuel],
                         "distance": loc["distance"]
                     })
