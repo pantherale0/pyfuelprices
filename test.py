@@ -75,12 +75,12 @@ async def main():
         # ):
         #     _LOGGER.info("Found location: %s", loc)
 
-        # _LOGGER.info("TankerKoenig DE test...")
-        # for loc in await data.find_fuel_locations_from_point(
-        #     coordinates=(53.068464, 12.532709),
-        #     radius=5.0
-        # ):
-        #     _LOGGER.info("Found location: %s", loc)
+        _LOGGER.info("Comparis CH test...")
+        for loc in await data.find_fuel_locations_from_point(
+            coordinates=(47.042277, 9.068475),
+            radius=5.0
+        ):
+            _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("FuelWatch AU test...")
         # for loc in await data.find_fuel_locations_from_point(

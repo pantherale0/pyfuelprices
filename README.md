@@ -33,6 +33,7 @@ Sources used to provide data for this module include:
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
 - CA: GasBuddy (https://www.gasbuddy.com/) - Use US data source below to access.
+- CH: Comparis (https://www.comparis.ch/benzin-preise)
 - DE: TankerKoenig (https://tankerkoenig.de/)
 - GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
 - GR: FuelGR (https://fuelgr.gr/)
