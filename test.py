@@ -63,6 +63,11 @@ async def main():
                 PROP_AREA_LAT: -36.975624329980654,
                 PROP_AREA_LONG: 174.78417701477935,
                 PROP_AREA_RADIUS: 15.0 # NZ (PetrolSpy)
+            },
+            {
+                PROP_AREA_LAT: 46.945200,
+                PROP_AREA_LONG: 7.464844,
+                PROP_AREA_RADIUS: 15.0 # CH
             }
         ],
         update_interval=timedelta(minutes=5)
