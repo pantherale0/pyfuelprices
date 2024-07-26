@@ -37,8 +37,8 @@ setuptools.setup(
     description='A generic library to collect fuel prices of fuel stations around the world!',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='http://github.com/n15c/pyfuelprices',
-    author='n15c',
+    url='http://github.com/pantherale0/pyfuelprices',
+    author='pantherale0',
     license='MIT',
     packages=setuptools.find_packages(),
     package_data={
