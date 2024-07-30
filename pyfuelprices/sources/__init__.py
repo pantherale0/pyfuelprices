@@ -76,20 +76,19 @@ class Source:
         """Return all available sites within a given radius."""
         locations = []
         for site in self.location_cache.values():
-            if site.lat < 90:
-                dist = distance.distance(coordinates,
-                                    (
-                                        site.lat,
-                                        site.long
-                                    )).miles
-                if dist < radius:
-                    await site.dynamic_build_fuels()
-                    locations.append(
-                        {
-                            **site.__dict__(),
-                            "distance": dist
-                        }
-                    )
+            dist = distance.distance(coordinates,
+                                (
+                                    site.lat,
+                                    site.long
+                                )).miles
+            if dist < radius:
+                await site.dynamic_build_fuels()
+                locations.append(
+                    {
+                        **site.__dict__(),
+                        "distance": dist
+                    }
+                )
         return locations
 
     async def update(self, areas=None, force=False) -> list[FuelLocation]:
