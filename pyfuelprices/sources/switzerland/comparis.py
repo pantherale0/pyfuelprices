@@ -97,6 +97,13 @@ class ComparisSource(Source):
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""
+        #Coord Check
+        lat = station["location"]["lat"]
+        lng = station["location"]["lng"]
+        if lat <-90 or lat > 90 or lng <-180 or lng > 180:
+            return False
+        
+
         site_id = f"{self.provider_name}_{station['id']}"
         _LOGGER.debug("Parsing Comparis location ID %s", site_id)
         plz_pattern = r'\d{4}'
@@ -130,10 +137,11 @@ class ComparisSource(Source):
     async def parse_response(self, response) -> list[FuelLocation]:
         for station_raw in response:
             station = self._parse_raw(station_raw)
-            if station.id not in self.location_cache:
-                self.location_cache[station.id] = station
-            else:
-                await self.location_cache[station.id].update(station)
+            if station != False: #If station information is not valid, then ret val is set to False
+                if station.id not in self.location_cache:
+                    self.location_cache[station.id] = station
+                else:
+                    await self.location_cache[station.id].update(station)
         return list(self.location_cache.values())
 
     def parse_fuels(self, fuels: dict[str, object]) -> list[Fuel]:
