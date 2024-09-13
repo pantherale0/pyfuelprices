@@ -43,6 +43,9 @@ class PetrolSpySource(Source):
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
         # first query the API to populate cache / update data in case this data is unavailable.
+        if radius > 15.0:
+            _LOGGER.warning("Radius %s too large for this provider. Limiting to %s", radius, 15.0)
+            radius = 15.0
         await self.update(
             areas=[{
                 PROP_AREA_LAT: coordinates[0],
@@ -108,7 +111,7 @@ class PetrolSpySource(Source):
             brand=station['brand'],
             available_fuels=self.parse_fuels(station.get("prices", [])),
             postal_code=station['postCode'],
-            currency="NZD",
+            currency="AUD" if station["country"] == "AU" else "NZD",
             props={
                 PROP_FUEL_LOCATION_SOURCE: self.provider_name,
                 PROP_FUEL_LOCATION_SOURCE_ID: station["id"],

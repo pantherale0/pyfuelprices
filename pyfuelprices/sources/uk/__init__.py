@@ -45,6 +45,7 @@ class CMAParser(Source):
         """Parses fuel data."""
         f_list = []
         for f_type in fuels:
+            # the following makes sure that a price is in a "normal" format
             if fuels[f_type] is not None:
                 if fuels[f_type] > 10000:
                     fuels[f_type] = round(fuels[f_type]/100, 1)
@@ -52,6 +53,7 @@ class CMAParser(Source):
                     fuels[f_type] = round(fuels[f_type]/10, 1)
                 if fuels[f_type] < 100:
                     fuels[f_type] = round(fuels[f_type]*100, 1)
+                fuels[f_type] = fuels[f_type] / 100 # fix "unit" issue
             f_list.append(Fuel(
                 fuel_type=f_type,
                 cost=fuels[f_type],
