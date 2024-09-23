@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["petrolspy"],
+        enabled_sources=["pecoonline"],
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
