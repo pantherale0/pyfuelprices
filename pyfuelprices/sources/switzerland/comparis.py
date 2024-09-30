@@ -101,8 +101,7 @@ class ComparisSource(Source):
         lat = station["location"]["lat"]
         lng = station["location"]["lng"]
         if lat <-90 or lat > 90 or lng <-180 or lng > 180:
-            return False
-        
+            return None
 
         site_id = f"{self.provider_name}_{station['id']}"
         _LOGGER.debug("Parsing Comparis location ID %s", site_id)
@@ -137,7 +136,7 @@ class ComparisSource(Source):
     async def parse_response(self, response) -> list[FuelLocation]:
         for station_raw in response:
             station = self._parse_raw(station_raw)
-            if station != False: #If station information is not valid, then ret val is set to False
+            if station: #If station information is not valid, then none is returned
                 if station.id not in self.location_cache:
                     self.location_cache[station.id] = station
                 else:
