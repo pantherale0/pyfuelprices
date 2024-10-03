@@ -106,8 +106,10 @@ class FuelLocation:
     def __dict__(self) -> dict:
         """Convert the object to a dict."""
         fuels = {}
+        fuel_props = {}
         for fuel in self.available_fuels:
             fuels[fuel.fuel_type] = fuel.cost
+            fuel_props[fuel.fuel_type] = fuel.props
         return {
             "id": self._id,
             "name": self._name,
@@ -117,7 +119,7 @@ class FuelLocation:
             "longitude": self.long,
             "brand": self._brand,
             "available_fuels": fuels,
-            "fuel_details": [f.__dict__() for f in self.available_fuels],
+            "fuel_details": fuel_props,
             "currency": self._currency,
             "last_updated": self.last_updated.isoformat(),
             "next_update": (
