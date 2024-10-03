@@ -117,6 +117,7 @@ class FuelLocation:
             "longitude": self.long,
             "brand": self._brand,
             "available_fuels": fuels,
+            "fuel_details": [f.__dict__() for f in self.available_fuels],
             "currency": self._currency,
             "last_updated": self.last_updated.isoformat(),
             "next_update": (
