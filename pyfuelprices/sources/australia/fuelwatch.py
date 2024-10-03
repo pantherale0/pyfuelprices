@@ -42,10 +42,11 @@ class FuelWatchSource(Source):
     async def get_fuel_products(self):
         """Retrieves available fuel products."""
         response_raw = await self._send_request(FUELWATCH_API_PRODUCTS)
-        for product in json.loads(response_raw):
-            if product["shortName"] not in self._fuel_products:
-                self._fuel_products.append(product["shortName"])
-        return self._fuel_products
+        if response_raw is not None:
+            for product in json.loads(response_raw):
+                if product["shortName"] not in self._fuel_products:
+                    self._fuel_products.append(product["shortName"])
+            return self._fuel_products
 
     def _parse_raw_fuel_station(self, station, site_id) -> FuelLocation:
         """Convert an instance of a single fuel station into a FuelLocation."""
@@ -102,8 +103,10 @@ class FuelWatchSource(Source):
                 url = FUELWATCH_API_SITES.format(
                     FUELTYPE=product
                 )
-                response_raw = json.loads(await self._send_request(url))
-                for station in response_raw:
+                response_raw = await self._send_request(url)
+                if response_raw is None:
+                    continue
+                for station in json.loads(response_raw):
                     site_id = f"{self.provider_name}_{station['id']}"
                     if site_id in self.location_cache:
                         self._update_fuel_station_prices(station, site_id)
@@ -111,11 +114,6 @@ class FuelWatchSource(Source):
                     loc = self._parse_raw_fuel_station(station, site_id)
                     self.location_cache[loc.id] = loc
                     continue
-            # for x in self.location_cache.values():
-            #     _df_data.append([x.lat, x.long])
-            # _df = pd.DataFrame(_df_data, columns=_df_columns)
-            # self.location_tree = KDTree(_df[["lat", "long"]].values,
-            #                             metric="euclidean")
             self.next_update += self.update_interval
             return list(self.location_cache.values())
 
