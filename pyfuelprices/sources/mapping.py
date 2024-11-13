@@ -2,6 +2,7 @@
 
 from .austria import SOURCE_MAP as AT_SOURCE_MAP
 from .australia import SOURCE_MAP as AU_SOURCE_MAP
+from .brazil import SOURCE_MAP as BR_SOURCE_MAP
 from .germany import SOURCE_MAP as DE_SOURCE_MAP
 from .greece import SOURCE_MAP as GR_SOURCE_MAP
 from .romania import SOURCE_MAP as RO_SOURCE_MAP
@@ -19,11 +20,13 @@ SOURCE_MAP = {
     **AU_SOURCE_MAP,
     **CH_SOURCE_MAP,
     **RO_SOURCE_MAP,
-    **GR_SOURCE_MAP
+    **GR_SOURCE_MAP,
+    **BR_SOURCE_MAP
 }
 
 COUNTRY_MAP = {
     "BE": ["directlease"],
+    "BR": [k for k in BR_SOURCE_MAP],
     "CA": ["gasbuddy"],
     "DE": [k for k in DE_SOURCE_MAP],
     "NL": [k for k in NL_SOURCE_MAP],
