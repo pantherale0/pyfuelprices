@@ -94,7 +94,7 @@ class GasPassSource(Source):
         _LOGGER.debug("Parsing GasPass location ID %s", site_id)
         loc = FuelLocation.create(
             site_id=site_id,
-            name=station["Auto Posto Bixiga"],
+            name=station["nome_fantasia"],
             address=station['endereco'],
             lat=station["geocode"]["latitude"],
             long=station["geocode"]["longitude"],
