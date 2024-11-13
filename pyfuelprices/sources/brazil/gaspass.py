@@ -78,19 +78,7 @@ class GasPassSource(Source):
             }],
             force=True
         )
-        locations = []
-        for site in self.location_cache.values():
-            dist = distance.distance(coordinates,
-                                 (
-                                    site.lat,
-                                    site.long
-                                )).miles
-            if dist < radius:
-                locations.append({
-                    **site.__dict__(),
-                    "distance": dist
-                })
-        return locations
+        return await super().search_sites(coordinates, radius)
 
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query GasPass on areas."""
