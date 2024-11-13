@@ -17,12 +17,14 @@ from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
     Source,
     geocode_reverse_lookup,
-    geopyexc
+    geopyexc,
+    UpdateFailedError
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONST_GASPASS_API_BASE = "https://gaspassproxy-cwa7dsbnadhwbhfe.brazilsouth-01.azurewebsites.net/api/v1/gaspass"
+CONST_API_HOST = "https://gaspassproxy2-dhf8a6aphxbng9g4.brazilsouth-01.azurewebsites.net"
+CONST_GET_FUELS = f"{CONST_API_HOST}/api/v1/gaspass/"
 CONST_FUELS = [
     "ultimo_preco_alcool",
     "ultimo_preco_diesel",
@@ -42,20 +44,27 @@ class GasPassSource(Source):
         """Send a request to the API for a given postcode and radius."""
         radius = radius * 1.609344 # convert miles to km
         _LOGGER.debug("Sending request to gaspass: %s",
-                      CONST_GASPASS_API_BASE)
-        async with self._client_session.post(
-            CONST_GASPASS_API_BASE,
-            headers=self._headers,
+                      CONST_GET_FUELS)
+        async with self._client_session.request(
+            method="POST",
+            url=CONST_GET_FUELS,
             json={
                 "lat": lat,
                 "long": long,
                 "radius": radius
-            }) as response:
-            if response.ok:
-                return await response.text()
-            _LOGGER.error("Error sending request to %s: %s",
-                            CONST_GASPASS_API_BASE,
-                            response)
+            },
+            headers={"Content-Type": "application/json"}) as response:
+            if not response.ok:
+                text = await response.text()
+                _LOGGER.error("Error sending request to %s: %s",
+                                CONST_GET_FUELS,
+                                text)
+                raise UpdateFailedError(
+                    response.status,
+                    response=text,
+                    headers=response.headers
+                )
+            return await response.text()
 
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query GasPass on areas."""
@@ -80,7 +89,7 @@ class GasPassSource(Source):
                     radius=area[PROP_AREA_RADIUS]
                 ))
                 if response_raw["message"] == "ok":
-                    await self.parse_response(response_raw["data"])
+                    await self.parse_response(response_raw)
                 else:
                     _LOGGER.error("Error sending request to %s: %s",
                                 self.provider_name,

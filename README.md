@@ -32,7 +32,7 @@ Sources used to provide data for this module include:
 - AU: FuelWatch (https://www.fuelwatch.wa.gov.au), FuelSnoop (https://www.fuelsnoop.com.au/) and PetrolSpy (https://petrolspy.com.au)
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
-- BR: GasPass - Via proxy service hosted at https://gaspassproxy-cwa7dsbnadhwbhfe.brazilsouth-01.azurewebsites.net (you can host this yourself too)
+- BR: GasPass - Via proxy service hosted at https://gaspassproxy2-dhf8a6aphxbng9g4.brazilsouth-01.azurewebsites.net (you can host this yourself too)
 - CA: GasBuddy (https://www.gasbuddy.com/) - Use US data source below to access.
 - CH: Comparis (https://www.comparis.ch/benzin-preise)
 - DE: TankerKoenig (https://tankerkoenig.de/)

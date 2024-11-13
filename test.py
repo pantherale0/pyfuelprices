@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["spritpreisrechner"],
+        enabled_sources=["gaspass"],
         configured_areas=[
             # {
             #     PROP_AREA_RADIUS: 5.0,
@@ -49,11 +49,11 @@ async def main():
             #     PROP_AREA_LONG: 115.93068100,
             #     PROP_AREA_RADIUS: 5.0
             # },
-            {
-                PROP_AREA_LAT: 48.212120650046984,
-                PROP_AREA_LONG: 14.287071446311938,
-                PROP_AREA_RADIUS: 25.0 # austria
-            },
+            # {
+            #     PROP_AREA_LAT: 48.212120650046984,
+            #     PROP_AREA_LONG: 14.287071446311938,
+            #     PROP_AREA_RADIUS: 25.0 # austria
+            # },
             # {
             #     PROP_AREA_LAT: 39.2062720,
             #     PROP_AREA_LONG: 22.2513570,
@@ -73,7 +73,12 @@ async def main():
             #     PROP_AREA_LAT: 46.945200,
             #     PROP_AREA_LONG: 7.464844,
             #     PROP_AREA_RADIUS: 15.0 # CH
-            # }
+            # },
+            {
+                PROP_AREA_LAT: -23.5557714,
+                PROP_AREA_LONG: -46.6395571,
+                PROP_AREA_RADIUS: 25.0 # Brazil
+            },
         ],
         update_interval=timedelta(minutes=5)
     )
