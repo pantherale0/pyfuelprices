@@ -12,6 +12,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
     PROP_AREA_LAT,
     PROP_AREA_LONG,
+    PROP_AREA_RADIUS,
     DESKTOP_USER_AGENT,
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
@@ -126,6 +127,19 @@ class SpripreisrechnerATSource(Source):
                 REG_CODE=region_code, FUEL_TYPE=fuel, REG_TYPE=region_type
             )
             await self.parse_response(json.loads(await self._send_request(url)))
+
+    async def search_sites(self, coordinates, radius: float) -> list[dict]:
+        """Return all available sites within a given radius."""
+        # first query the API to populate cache / update data in case this data is unavailable.
+        await self.update(
+            areas=[{
+                PROP_AREA_LAT: coordinates[0],
+                PROP_AREA_LONG: coordinates[1],
+                PROP_AREA_RADIUS: radius
+            }],
+            force=True
+        )
+        return await super().search_sites(coordinates, radius)
 
     async def update(self, areas=None, force: bool | None = None) -> list[FuelLocation]:
         """Custom update handler to query each region."""
