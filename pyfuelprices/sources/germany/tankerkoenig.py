@@ -3,7 +3,7 @@
 import logging
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -36,6 +36,7 @@ class TankerKoenigSource(Source):
     }
     provider_name = "tankerkoenig"
     location_cache: dict[str, FuelLocation] = {}
+    update_interval = timedelta(days=1)
     # location_tree = None
 
     async def _send_request(self, postcode, radius):
