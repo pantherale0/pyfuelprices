@@ -4,6 +4,7 @@ import logging
 import json
 
 from datetime import datetime, timedelta
+from geopy import distance
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -65,6 +66,31 @@ class GasPassSource(Source):
                     headers=response.headers
                 )
             return await response.text()
+
+    async def search_sites(self, coordinates, radius: float) -> list[dict]:
+        """Return all available sites within a given radius."""
+        # first query the API to populate cache / update data in case this data is unavailable.
+        await self.update(
+            areas=[{
+                PROP_AREA_LAT: coordinates[0],
+                PROP_AREA_LONG: coordinates[1],
+                PROP_AREA_RADIUS: radius
+            }],
+            force=True
+        )
+        locations = []
+        for site in self.location_cache.values():
+            dist = distance.distance(coordinates,
+                                 (
+                                    site.lat,
+                                    site.long
+                                )).miles
+            if dist < radius:
+                locations.append({
+                    **site.__dict__(),
+                    "distance": dist
+                })
+        return locations
 
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Custom update handler as this needs to query GasPass on areas."""
