@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["datos.energia.gob"],
+        enabled_sources=["goriva"],
         configured_areas=[
             # {
             #     PROP_AREA_RADIUS: 5.0,
@@ -79,10 +79,15 @@ async def main():
             #     PROP_AREA_LONG: -46.6395571,
             #     PROP_AREA_RADIUS: 25.0 # Brazil
             # },
+            # {
+            #     PROP_AREA_LAT: -34.658476,
+            #     PROP_AREA_LONG: -58.529443,
+            #     PROP_AREA_RADIUS: 25.0 # Argentina
+            # },
             {
-                PROP_AREA_LAT: -34.658476,
-                PROP_AREA_LONG: -58.529443,
-                PROP_AREA_RADIUS: 25.0 # Argentina
+                PROP_AREA_LAT: 46.053478,
+                PROP_AREA_LONG: 14.510424,
+                PROP_AREA_RADIUS: 25.0 # Slovenia
             },
         ],
         update_interval=timedelta(minutes=5)

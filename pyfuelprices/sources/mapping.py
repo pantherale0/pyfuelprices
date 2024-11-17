@@ -10,6 +10,7 @@ from .romania import SOURCE_MAP as RO_SOURCE_MAP
 from .uk.map import SOURCE_MAP as UK_SOURCE_MAP
 from .usa import SOURCE_MAP as US_SOURCE_MAP
 from .netherlands import SOURCE_MAP as NL_SOURCE_MAP
+from .slovenia import SOURCE_MAP as SI_SOURCE_MAP
 from .switzerland import SOURCE_MAP as CH_SOURCE_MAP
 
 SOURCE_MAP = {
@@ -23,7 +24,8 @@ SOURCE_MAP = {
     **RO_SOURCE_MAP,
     **GR_SOURCE_MAP,
     **BR_SOURCE_MAP,
-    **AR_SOURCE_MAP
+    **AR_SOURCE_MAP,
+    **SI_SOURCE_MAP
 }
 
 COUNTRY_MAP = {
@@ -40,5 +42,6 @@ COUNTRY_MAP = {
     "AT": [k for k in AT_SOURCE_MAP],
     "CH": [k for k in CH_SOURCE_MAP],
     "RO": [k for k in RO_SOURCE_MAP],
-    "GR": [k for k in GR_SOURCE_MAP]
+    "GR": [k for k in GR_SOURCE_MAP],
+    "SI": [k for k in SI_SOURCE_MAP]
 }
