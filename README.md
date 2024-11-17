@@ -29,8 +29,9 @@ TODO
 
 Sources used to provide data for this module include:
 
-- AU: FuelWatch (https://www.fuelwatch.wa.gov.au), FuelSnoop (https://www.fuelsnoop.com.au/) and PetrolSpy (https://petrolspy.com.au)
+- AR: GobEnergy (http://datos.energia.gob.ar/dataset/precios-en-surtidor/archivo/80ac25de-a44a-4445-9215-090cf55cfda5)
 - AT: Spritpreisrechner (https://www.spritpreisrechner.at/)
+- AU: FuelWatch (https://www.fuelwatch.wa.gov.au), FuelSnoop (https://www.fuelsnoop.com.au/) and PetrolSpy (https://petrolspy.com.au)
 - BE: DirectLease TankService (https://directlease.nl/tankservice/) - Use Netherlands data source below to access.
 - BR: GasPass - Via proxy service hosted at https://gaspassproxy2-dhf8a6aphxbng9g4.brazilsouth-01.azurewebsites.net (you can host this yourself too)
 - CA: GasBuddy (https://www.gasbuddy.com/) - Use US data source below to access.
@@ -41,6 +42,7 @@ Sources used to provide data for this module include:
 - NL: DirectLease TankService (https://directlease.nl/tankservice/)
 - NZ: PetrolSpy (https://petrolspy.com.au) - Use Australia fuel source above to access.
 - RO: Peco-Online (https://www.peco-online.ro/)
+- SI: Goriva (https://goriva.si/)
 - US: GasBuddy (https://www.gasbuddy.com/)
 
 ## Development
