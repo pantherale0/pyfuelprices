@@ -2,6 +2,7 @@
 
 import logging
 import json
+import csv
 
 from datetime import timedelta, datetime
 from typing import final
@@ -110,6 +111,10 @@ class Source:
                 if "application/json" not in response.content_type:
                     return await self.parse_response(
                         response=json.loads(await response.text())
+                    )
+                if response.content_type == "text/csv":
+                    return await self.parse_response(
+                        response=list(csv.DictReader(await response.text()))
                     )
                 return await self.parse_response(
                     response=await response.json()

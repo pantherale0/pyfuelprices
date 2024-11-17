@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["gaspass"],
+        enabled_sources=["datos.energia.gob"],
         configured_areas=[
             # {
             #     PROP_AREA_RADIUS: 5.0,
@@ -74,10 +74,15 @@ async def main():
             #     PROP_AREA_LONG: 7.464844,
             #     PROP_AREA_RADIUS: 15.0 # CH
             # },
+            # {
+            #     PROP_AREA_LAT: -23.5557714,
+            #     PROP_AREA_LONG: -46.6395571,
+            #     PROP_AREA_RADIUS: 25.0 # Brazil
+            # },
             {
-                PROP_AREA_LAT: -23.5557714,
-                PROP_AREA_LONG: -46.6395571,
-                PROP_AREA_RADIUS: 25.0 # Brazil
+                PROP_AREA_LAT: -34.658476,
+                PROP_AREA_LONG: -58.529443,
+                PROP_AREA_RADIUS: 25.0 # Argentina
             },
         ],
         update_interval=timedelta(minutes=5)
@@ -118,12 +123,12 @@ async def main():
         # ))
 
 
-        _LOGGER.info("Austria test...")
-        for loc in await data.find_fuel_locations_from_point(
-            coordinates=(48.212120650046984, 14.287071446311938),
-            radius=25.0,
-        ):
-            _LOGGER.info("Found location: %s", loc)
+        # _LOGGER.info("Austria test...")
+        # for loc in await data.find_fuel_locations_from_point(
+        #     coordinates=(48.212120650046984, 14.287071446311938),
+        #     radius=25.0,
+        # ):
+        #     _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("GasBuddy USA Test...")
         # for loc in await data.find_fuel_locations_from_point(
