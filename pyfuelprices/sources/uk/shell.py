@@ -14,8 +14,9 @@ class ShellUKSource(CMAParser):
     """Shell UK uses the CMA parser although requires custom request handlers."""
 
     _url = ("https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json"
-            "?sp=r&st=2023-11-21T05%3A20%3A29Z&se=2024-11-21T13%3A20%3A29Z&spr=https&"
-            "sv=2022-11-02&sr=b&sig=%2F4eArYrrj1qKpD6Kn3a8on7Fm3jqTdBAKeH04gsuNho%3D")
+            "?sp=r&st=2024-11-05T09:55:57Z&se=2025-11-05T17:55:57Z&spr=https&"
+            "sv=2022-11-02&sr=b&sig=b1v0zFX8YGVKCAbOHWvOozPA7PWRPtcloc3EUKyJZZo%3D"
+            "#vanity-aHR0cHM6Ly93d3cuc2hlbGwuY28udWsvZnVlbC1wcmljZXMtZGF0YS5odG1s")
     provider_name = "shelluk"
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT
