@@ -44,6 +44,9 @@ class GorivaSource(Source):
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
         # first query the API to populate cache / update data in case this data is unavailable.
+        data = await super().search_sites(coordinates, radius)
+        if len(data)>0:
+            return data
         await self.update(
             areas=[{
                 PROP_AREA_LAT: coordinates[0],
@@ -52,7 +55,8 @@ class GorivaSource(Source):
             }],
             force=True
         )
-        return await super().search_sites(coordinates, radius)
+        data = await super().search_sites(coordinates, radius)
+        return data
 
     async def update(self, areas=None, force=False) -> list[FuelLocation]:
         """Update hooks for the data source."""

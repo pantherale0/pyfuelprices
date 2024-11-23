@@ -53,6 +53,9 @@ class FuelGrSource(Source):
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites (radius not used)"""
         # first query the API to populate the cache / update data
+        data = await super().search_sites(coordinates, radius)
+        if len(data)>0:
+            return data
         await self.update_area(
             {
                 PROP_AREA_LAT: coordinates[0],

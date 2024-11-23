@@ -43,6 +43,9 @@ class PetrolSpySource(Source):
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
         # first query the API to populate cache / update data in case this data is unavailable.
+        data = await super().search_sites(coordinates, radius)
+        if len(data)>0:
+            return data
         if radius > 15.0:
             _LOGGER.warning("Radius %s too large for this provider. Limiting to %s", radius, 15.0)
             radius = 15.0
