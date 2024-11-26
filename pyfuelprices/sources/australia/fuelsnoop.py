@@ -121,11 +121,13 @@ class FuelSnoopSource(Source):
         output = []
         for k in fuels:
             f = fuels[k]
+            if not isinstance(f["price"], float) or not isinstance(f["price"], int):
+                continue # ignore this fuel as invalid value
             if f["price"] > 999:
                 continue # ignore this fuel as not available at this stn
             output.append(Fuel(
                 fuel_type=k,
-                cost=f["price"],
+                cost=f["price"]/100,
                 props=f
             ))
         return output
