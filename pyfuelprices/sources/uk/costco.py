@@ -52,7 +52,7 @@ class CostcoUKSource(Source):
             site_id = f"{self.provider_name}_{station['addressId']}"
             location = FuelLocation.create(
                 site_id=site_id,
-                name=station["displayName"],
+                name=f"Costco {station["displayName"]}",
                 address=f"{station["line1"]}\n{station["line2"]}\n{station["town"]}\n{station["postalCode"]}",
                 brand=self.provider_name,
                 available_fuels=self.parse_fuels(
