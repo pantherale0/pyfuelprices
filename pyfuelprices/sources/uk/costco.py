@@ -26,6 +26,7 @@ class CostcoUKSource(Source):
         "Referer": "https://www.costco.co.uk/store-finder"
     }
     location_cache: dict[str, FuelLocation] = {}
+    provider_name: str = "costco"
 
     def parse_fuels(self, fuels):
         """Parse Costco Fuel."""
