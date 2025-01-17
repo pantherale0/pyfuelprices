@@ -14,8 +14,8 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_DYNAMIC_BUILD,
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_SOURCE_ID,
-    ANDROID_USER_AGENT
 )
+from pyfuelprices._version import __version__ as VERSION
 from pyfuelprices.sources import ServiceBlocked, Source, UpdateFailedError
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 
@@ -100,7 +100,7 @@ class DirectLeaseFuelLocation(FuelLocation):
             url=request_url,
             headers={
                 "X-Checksum": _checksum_generator(request_url),
-                "User-Agent": ANDROID_USER_AGENT
+                "User-Agent": f"HomeAssistant/pyfuelprices/{VERSION}"
             }) as response:
                 _LOGGER.debug("Got status code %s for dynamic parse of site %s",
                                 response.status,
