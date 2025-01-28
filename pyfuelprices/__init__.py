@@ -31,6 +31,8 @@ class FuelPrices:
                     await s.update(areas=a, force=f)
             except TimeoutError as err:
                 _LOGGER.warning("Timeout updating %s: %s", s.provider_name, err)
+            except (ValueError, TypeError) as err:
+                _LOGGER.exception(err)
         coros = [
             update_src(s, self.configured_areas, force) for s in self.configured_sources.values()
         ]
@@ -111,24 +113,28 @@ class FuelPrices:
                update_interval: timedelta = timedelta(days=1),
                country_code: str = "",
                configured_areas: list[dict] = None,
-               timeout: timedelta = timedelta(seconds=30)
+               timeout: timedelta = timedelta(seconds=30),
+               client_session = None
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
         self.configured_areas = configured_areas
-        self.client_session = aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(
-                use_dns_cache=True,
-                ttl_dns_cache=360
-            ),
-            timeout=aiohttp.ClientTimeout(
-                total=timeout.seconds
+        if client_session is not None:
+            self.client_session = client_session
+        else:
+            self.client_session = aiohttp.ClientSession(
+                connector=aiohttp.TCPConnector(
+                    use_dns_cache=True,
+                    ttl_dns_cache=360
+                ),
+                timeout=aiohttp.ClientTimeout(
+                    total=timeout.seconds
+                )
             )
-        )
         if enabled_sources is not None:
             for src in enabled_sources:
                 if str(src) not in SOURCE_MAP:
-                    raise ValueError(f"Source {src} is not valid for this application.")
+                    _LOGGER.error("Source %s is not valid for this application.", src)
                 self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval,
                                              client_session=self.client_session)
