@@ -147,10 +147,8 @@ class DirectLeaseFuelLocation(FuelLocation):
                 elif response.status == 403:
                     # 403 for directlease is an IP block
                     _LOGGER.error(
-                        ("DirectLease appears to have blocked your IP. Your options are:"
-                        "1) Contact tankservice-block@app-it-up.com for further support. "
-                        "2) Change your WAN IP address or use a VPN. "
-                        "3) Use a proxy server to connect. "))
+                        ("This service has blocked your IP due to breaching license conditions."
+                        "Contact tankservice-block@app-it-up.com for further support."))
 
             self.next_update = datetime.now() + timedelta(
             days=1,
