@@ -11,6 +11,7 @@ from .jet import JetUKSource
 from .karanretail import KaranRetailSource
 from .moto import MotowayUKSource
 from .motorfuelgroup import MotorFuelGroupUKSource
+from .petrolprices import PetrolPricesUKSource
 from .rontec import RontecUKSource
 from .sainsburys import SainsburysUKSource
 from .sgn import SgnRetailUKSource
@@ -28,6 +29,7 @@ SOURCE_MAP: dict[str, Source] = {
     "karanretail": KaranRetailSource,
     "motoway": MotowayUKSource,
     "motorfuelgroup": MotorFuelGroupUKSource,
+    "petrolprices": PetrolPricesUKSource,
     "rontec": RontecUKSource,
     "sainsburys": SainsburysUKSource,
     "sgnretail": SgnRetailUKSource,

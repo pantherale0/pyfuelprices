@@ -12,17 +12,17 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     data = FuelPrices.create(
-        enabled_sources=["costco"],
+        enabled_sources=["petrolprices"],
         configured_areas=[
-            # {
-            #     PROP_AREA_RADIUS: 5.0,
-            #     PROP_AREA_LAT: 52.041627,
-            #     PROP_AREA_LONG: -0.759651
-            # },
+            {
+                PROP_AREA_RADIUS: 5.0,
+                PROP_AREA_LAT: 52.041627,
+                PROP_AREA_LONG: -0.759651 # UK
+            },
             # {
             #     PROP_AREA_RADIUS: 5.0,
             #     PROP_AREA_LAT: 52.23817,
-            #     PROP_AREA_LONG: 6.58763
+            #     PROP_AREA_LONG: 6.58763 # Netherlands
             # },
             # {
             #     PROP_AREA_LAT: 49.134068,
@@ -84,21 +84,21 @@ async def main():
             #     PROP_AREA_LONG: -58.529443,
             #     PROP_AREA_RADIUS: 25.0 # Argentina
             # },
-            {
-                PROP_AREA_LAT: 46.053478,
-                PROP_AREA_LONG: 14.510424,
-                PROP_AREA_RADIUS: 25.0 # Slovenia
-            },
+            # {
+            #     PROP_AREA_LAT: 46.053478,
+            #     PROP_AREA_LONG: 14.510424,
+            #     PROP_AREA_RADIUS: 25.0 # Slovenia
+            # },
         ],
         update_interval=timedelta(minutes=5)
     )
     while True:
         await data.update()
-        # for loc in await data.find_fuel_locations_from_point(
-        #     coordinates=(52.041627, -0.759651),
-        #     radius=5.0
-        # ):
-        #     _LOGGER.info("Found location: %s", loc)
+        for loc in await data.find_fuel_locations_from_point(
+            coordinates=(52.041627, -0.759651),
+            radius=5.0
+        ):
+            _LOGGER.info("Found location: %s", loc)
 
         # _LOGGER.info("Comparis CH test...")
         # for loc in await data.find_fuel_locations_from_point(
