@@ -13,8 +13,7 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS,
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
-    PROP_FUEL_LOCATION_SOURCE_ID,
-    ANDROID_USER_AGENT
+    PROP_FUEL_LOCATION_SOURCE_ID
 )
 from pyfuelprices.helpers import geocode_reverse_lookup, get_bounding_box
 from pyfuelprices.sources import Source
@@ -31,13 +30,14 @@ CONST_GASBUDDY_GET_STATION_FMT = (
     "https://services.gasbuddy.com/mobile-orchestration/stations/{STATIONID}"
     "?authid={AUTHID}"
 )
+CONST_USER_AGENT = "GasBuddy/701.14.24016 (24016; android 34) Google/Pixel_4_XL"
 
 class GasBuddyUSASource(Source):
     """GasBuddy USA data source."""
 
     _headers = {
         "apikey": "56c57e8f1132465d817d6a753c59387e",
-        "User-Agent": ANDROID_USER_AGENT
+        "User-Agent": CONST_USER_AGENT
     }
     _parser_radius = 0
     _parser_coords = ()
