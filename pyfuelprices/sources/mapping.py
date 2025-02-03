@@ -43,6 +43,24 @@ SOURCE_MAP: dict[str, tuple[object, int, int]] = {
     **NZ_SOURCE_MAP
 }
 
+FULL_COUNTRY_MAP = {
+    "AR": [k for k in AR_SOURCE_MAP],
+    "BE": [k for k in BE_SOURCE_MAP],
+    "BR": [k for k in BR_SOURCE_MAP],
+    "CA": [k for k in CA_SOURCE_MAP],
+    "DE": [k for k in DE_SOURCE_MAP],
+    "NL": [k for k in NL_SOURCE_MAP],
+    "NZ": [k for k in NZ_SOURCE_MAP],
+    "GB": [k for k in UK_SOURCE_MAP],
+    "US": [k for k in US_SOURCE_MAP],
+    "AU": [k for k in AU_SOURCE_MAP],
+    "AT": [k for k in AT_SOURCE_MAP],
+    "CH": [k for k in CH_SOURCE_MAP],
+    "RO": [k for k in RO_SOURCE_MAP],
+    "GR": [k for k in GR_SOURCE_MAP],
+    "SI": [k for k in SI_SOURCE_MAP]
+}
+
 COUNTRY_MAP = {
     "AR": [k for k, v in AR_SOURCE_MAP.items() if len(v)==3 and v[1]==1],
     "BE": [k for k, v in BE_SOURCE_MAP.items() if len(v)==3 and v[1]==1],
