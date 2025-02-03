@@ -139,6 +139,13 @@ class PetrolPricesUKSource(Source):
         _LOGGER.debug("Parsing station %s", station["idstation"])
         site_id = f"{self.provider_name}_{station['idstation']}"
         price = float(station["price"]) / 1000
+        fuel = Fuel(
+            fuel_type=fuel_type,
+            cost=price if price > 0 else -1,
+            props={
+                **station["fuel"],
+                "available": price>0}
+        )
         loc = FuelLocation.create(
             site_id=site_id,
             name=station["name"],
@@ -146,15 +153,7 @@ class PetrolPricesUKSource(Source):
             lat=station["lat"],
             long=station["lng"],
             brand=station["fuel_brand_name"],
-            available_fuels=[
-                Fuel(
-                    fuel_type=fuel_type,
-                    cost=price if price > 0 else -1,
-                    props={
-                        **station["fuel"],
-                        "available": price>0}
-                )
-            ],
+            available_fuels=[] if fuel.cost == -1 else [fuel],
             postal_code=station["postcode"],
             currency="GBP",
             props={
