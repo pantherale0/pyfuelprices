@@ -183,7 +183,7 @@ class DirectLeaseTankServiceParser(Source):
                                 "1) Contact tankservice-block@app-it-up.com for further support. "
                                 "2) Change your WAN IP address or use a VPN. "
                                 "3) Use a proxy server to connect. "))
-                raise ServiceBlocked(err.status, err.response, err.headers) from err
+                raise ServiceBlocked(err.status, err.response, err.headers, self.provider_name) from err
 
         self.next_update = datetime.now() + timedelta(
             days=1,

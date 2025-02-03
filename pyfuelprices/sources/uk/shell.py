@@ -48,10 +48,12 @@ class ShellUKSource(CMAParser):
                         raise UpdateFailedError(
                             status=response.status,
                             response="Invalid response provided.",
-                            headers=response.headers
+                            headers=response.headers,
+                            service=self.provider_name
                         ) from exc
                 raise UpdateFailedError(
                     status=response.status,
                     response=await response.text(),
-                    headers=response.headers
+                    headers=response.headers,
+                    service=self.provider_name
                 )

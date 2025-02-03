@@ -122,7 +122,8 @@ class Source:
             raise UpdateFailedError(
                 status=response.status,
                 response=await response.text(),
-                headers=response.headers
+                headers=response.headers,
+                service=self.provider_name
             )
 
     async def parse_response(self, response) -> list[FuelLocation]:
@@ -151,10 +152,11 @@ class Source:
 class UpdateFailedError(Exception):
     """Update failure exception."""
 
-    def __init__(self, status: int, response: str, headers: dict) -> None:
+    def __init__(self, status: int, response: str, headers: dict, service: str) -> None:
         self.status = status
         self.response = response
         self.headers = headers
+        self.service = service
 
 class ServiceBlocked(UpdateFailedError):
     """Service Blocked exception."""

@@ -63,7 +63,8 @@ class GasPassSource(Source):
                 raise UpdateFailedError(
                     response.status,
                     response=text,
-                    headers=response.headers
+                    headers=response.headers,
+                    service=self.provider_name
                 )
             return await response.text()
 
