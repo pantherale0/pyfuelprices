@@ -2,4 +2,4 @@
 
 from .directlease import DirectLeaseTankServiceParser
 
-SOURCE_MAP = {"directlease": (DirectLeaseTankServiceParser, 0, 0,)}
+SOURCE_MAP = {"directlease": (DirectLeaseTankServiceParser, 1, 1, 0)}
