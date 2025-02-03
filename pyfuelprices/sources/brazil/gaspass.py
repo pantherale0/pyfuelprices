@@ -39,7 +39,11 @@ class GasPassSource(Source):
     """GasPass Source."""
     provider_name = "gaspass"
     location_cache: dict[str, FuelLocation] = {}
-    update_interval = timedelta(hours=6) # limit update interval to prevent overloading proxy
+
+    def __init__(self, update_interval = ..., client_session = None):
+        if update_interval.seconds < 3600:
+            update_interval = timedelta(hours=1)
+        super().__init__(update_interval, client_session)
 
     async def _send_request(self, lat, long, radius):
         """Send a request to the API for a given postcode and radius."""

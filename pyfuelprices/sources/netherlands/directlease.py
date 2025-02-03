@@ -164,10 +164,14 @@ class DirectLeaseTankServiceParser(Source):
     """DirectLease parser for Belgium/Netherlands data."""
 
     _url = DIRECTLEASE_API_PLACES
-    update_interval = timedelta(days=1) # update once per day to prevent API spam.
     provider_name = "directlease"
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
+
+    def __init__(self, update_interval = ..., client_session = None):
+        if update_interval.days < 1:
+            update_interval=timedelta(days=1)
+        super().__init__(update_interval, client_session)
 
     async def get_site(self, site_id) -> FuelLocation:
         await self.location_cache[site_id].dynamic_build_fuels()
