@@ -2,4 +2,4 @@
 
 from .pecoonline import PecoOnlineSource
 
-SOURCE_MAP = {"pecoonline": PecoOnlineSource}
+SOURCE_MAP = {"pecoonline": (PecoOnlineSource, 1, 1,)}

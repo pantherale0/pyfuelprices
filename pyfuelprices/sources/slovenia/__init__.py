@@ -3,5 +3,5 @@
 from .goriva import GorivaSource
 
 SOURCE_MAP = {
-    "goriva": GorivaSource
+    "goriva": (GorivaSource, 1, 1,)
 }

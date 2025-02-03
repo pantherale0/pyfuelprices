@@ -3,5 +3,5 @@
 from .gasbuddy import GasBuddyUSASource
 
 SOURCE_MAP = {
-    "gasbuddy": GasBuddyUSASource
+    "gasbuddy": (GasBuddyUSASource, 1, 1,)
 }

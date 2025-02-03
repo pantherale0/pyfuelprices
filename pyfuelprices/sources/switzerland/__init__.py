@@ -3,5 +3,5 @@
 from .comparis import ComparisSource
 
 SOURCE_MAP = {
-    "comparis": ComparisSource
+    "comparis": (ComparisSource, 1, 1,)
 }

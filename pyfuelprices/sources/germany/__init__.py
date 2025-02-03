@@ -3,5 +3,5 @@
 from .tankerkoenig import TankerKoenigSource
 
 SOURCE_MAP = {
-    "tankerkoenig": TankerKoenigSource
+    "tankerkoenig": (TankerKoenigSource, 1, 1,)
 }

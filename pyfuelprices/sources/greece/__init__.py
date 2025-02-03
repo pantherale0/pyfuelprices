@@ -2,4 +2,4 @@
 
 from .fuelgr import FuelGrSource
 
-SOURCE_MAP = {"fuelgr": FuelGrSource}
+SOURCE_MAP = {"fuelgr": (FuelGrSource, 1, 1,)}

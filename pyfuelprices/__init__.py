@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import aiohttp
 
-from pyfuelprices.sources import Source, geocode_reverse_lookup
+from pyfuelprices.sources import Source, geocode_reverse_lookup, UpdateFailedError
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
 from .fuel_locations import FuelLocation
@@ -36,7 +36,10 @@ class FuelPrices:
         coros = [
             update_src(s, self.configured_areas, force) for s in self.configured_sources.values()
         ]
-        await asyncio.gather(*coros)
+        exceptions = await asyncio.gather(*coros, return_exceptions=True)
+        for exc in exceptions:
+            if isinstance(exc, Exception):
+                raise UpdateExceptionGroup([x for x in exceptions if isinstance(x, Exception)])
 
     async def get_fuel_location(self, site_id: str, source_id: str) -> FuelLocation:
         """Retrieve a single fuel location (supporting dynamic parse)."""
@@ -135,8 +138,12 @@ class FuelPrices:
             for src in enabled_sources:
                 if str(src) not in SOURCE_MAP:
                     _LOGGER.error("Source %s is not valid for this application.", src)
+                    continue
+                if SOURCE_MAP.get(str(src))[1] == 0:
+                    _LOGGER.error("Source %s has been disabled.", src)
+                    continue
                 self.configured_sources[src] = (
-                    SOURCE_MAP.get(str(src))(update_interval=update_interval,
+                    SOURCE_MAP.get(str(src))[0](update_interval=update_interval,
                                              client_session=self.client_session)
                 )
         if enabled_sources is None:
@@ -144,9 +151,33 @@ class FuelPrices:
             if country_code != "":
                 def_sources = COUNTRY_MAP.get(country_code.upper(), [])
             for src in def_sources:
+                if SOURCE_MAP.get(str(src))[1] == 0:
+                    _LOGGER.error("Source %s has been disabled.", src)
+                    continue
                 self.configured_sources[src] = (
                     SOURCE_MAP.get(str(src))(update_interval=update_interval,
                                              client_session=self.client_session)
                 )
 
         return self
+
+class UpdateExceptionGroup(Exception):
+    """A group of exceptions."""
+    def __init__(self, exceptions: list[Exception]):
+        self._excs = exceptions
+
+    @property
+    def failed_providers(self) -> dict:
+        """Failed providers."""
+        errors = {}
+        for exc in self._excs:
+            if isinstance(exc, UpdateFailedError):
+                errors[exc.service] = exc.status
+        return errors
+
+    @property
+    def exception_list(self) -> list[Exception]:
+        """A list of other exceptions."""
+        return [
+            x for x in self._excs if not isinstance(x, UpdateFailedError)
+        ]

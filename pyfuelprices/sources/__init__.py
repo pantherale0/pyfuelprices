@@ -119,6 +119,13 @@ class Source:
                 return await self.parse_response(
                     response=await response.json()
                 )
+            if response.status == 403:
+                raise ServiceBlocked(
+                    status=response.status,
+                    response=await response.text(),
+                    headers=response.headers,
+                    service=self.provider_name
+                )
             raise UpdateFailedError(
                 status=response.status,
                 response=await response.text(),

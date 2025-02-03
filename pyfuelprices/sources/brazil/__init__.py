@@ -3,5 +3,5 @@
 from .gaspass import GasPassSource
 
 SOURCE_MAP = {
-    "gaspass": GasPassSource
+    "gaspass": (GasPassSource, 1, 1,)
 }
