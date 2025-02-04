@@ -103,6 +103,7 @@ class FuelLocation:
         self._postal_code = new_val
 
     @final
+    @property
     def __dict__(self) -> dict:
         """Convert the object to a dict."""
         fuels = {}
@@ -167,6 +168,14 @@ class FuelLocation:
             if fuel.fuel_type == f_type:
                 return fuel
         raise ValueError(f"No existing fuel data found for {f_type}")
+
+    @final
+    def add_or_update_fuel(self, fuel: Fuel):
+        """Create or update a given fuel."""
+        try:
+            self.get_fuel(fuel.fuel_type).update(fuel.fuel_type, fuel.cost, fuel.props)
+        except ValueError:
+            self.available_fuels.append(fuel)
 
     async def dynamic_build_fuels(self):
         """Dynamic build of fuels for when accessing this data would normally be costly."""

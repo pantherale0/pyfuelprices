@@ -9,3 +9,7 @@ CONST_PETROLPRICES_FUEL_MAP = {
     "4": "B10",
     "5": "B7"
 }
+
+CONST_PODPOINT_BASE = "https://mobile-api.pod-point.com/api3/v5"
+CONST_PODPOINT_SEARCH = "{BASE}/addresses?payg=true&force=true&order=proximity:{LAT}:{LNG}"
+CONST_PODPOINT_LOCATION = "{BASE}/addresses/{LOC_ID}/pods?include=price,model,charges,advert,unit_connectors.status,range&perpage=all&order=-availability"

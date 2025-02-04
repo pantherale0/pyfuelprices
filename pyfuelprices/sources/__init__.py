@@ -86,7 +86,7 @@ class Source:
                 await site.dynamic_build_fuels()
                 locations.append(
                     {
-                        **site.__dict__(),
+                        **site.__dict__,
                         "distance": dist
                     }
                 )
