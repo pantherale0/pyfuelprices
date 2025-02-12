@@ -31,7 +31,7 @@ SOURCE_MAP: dict[str, tuple[Source, int, int]] = {
     "motoway": (MotowayUKSource, 1, 1,),
     "motorfuelgroup": (MotorFuelGroupUKSource, 1, 1,),
     "petrolprices": (PetrolPricesUKSource, 1, 1, 1),
-    "podpoint": (PodPointSource, 1, 0, 0,),
+    "podpoint": (PodPointSource, 1, 1, 0,),
     "rontec": (RontecUKSource, 1, 1,),
     "sainsburys": (SainsburysUKSource, 1, 1,),
     "sgnretail": (SgnRetailUKSource, 1, 1,),
