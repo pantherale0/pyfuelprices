@@ -12,6 +12,7 @@ from .karanretail import KaranRetailSource
 from .moto import MotowayUKSource
 from .motorfuelgroup import MotorFuelGroupUKSource
 from .petrolprices import PetrolPricesUKSource
+from .podpoint import PodPointSource
 from .rontec import RontecUKSource
 from .sainsburys import SainsburysUKSource
 from .sgn import SgnRetailUKSource
@@ -30,6 +31,7 @@ SOURCE_MAP: dict[str, tuple[Source, int, int]] = {
     "motoway": (MotowayUKSource, 1, 1,),
     "motorfuelgroup": (MotorFuelGroupUKSource, 1, 1,),
     "petrolprices": (PetrolPricesUKSource, 1, 1, 1),
+    "podpoint": (PodPointSource, 1, 1, 0,),
     "rontec": (RontecUKSource, 1, 1,),
     "sainsburys": (SainsburysUKSource, 1, 1,),
     "sgnretail": (SgnRetailUKSource, 1, 1,),

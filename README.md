@@ -37,7 +37,7 @@ Sources used to provide data for this module include:
 - CA: GasBuddy (https://www.gasbuddy.com/) - Use US data source below to access.
 - CH: Comparis (https://www.comparis.ch/benzin-preise)
 - DE: TankerKoenig (https://tankerkoenig.de/)
-- GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data)
+- GB: CMA Temporary Road Fuel Price ODS (https://www.gov.uk/guidance/access-fuel-price-data), PodPoint Public Charges
 - GR: FuelGR (https://fuelgr.gr/)
 - NL: DirectLease TankService (https://directlease.nl/tankservice/)
 - NZ: PetrolSpy (https://petrolspy.com.au) - Use Australia fuel source above to access.
