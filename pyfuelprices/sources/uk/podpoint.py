@@ -7,7 +7,10 @@ from datetime import datetime
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
-    PROP_AREA_LONG
+    PROP_AREA_LONG,
+    PROP_FUEL_LOCATION_SOURCE,
+    PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
+    PROP_FUEL_LOCATION_SOURCE_ID
 )
 from pyfuelprices.sources import Source, geocode_reverse_lookup, geopyexc
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
@@ -88,7 +91,12 @@ class PodPointSource(Source):
             currency="GBP",
             postal_code=response["address"]["postcode"],
             next_update=self.next_update,
-            props=response
+            props={
+                **response,
+                PROP_FUEL_LOCATION_SOURCE: self.provider_name,
+                PROP_FUEL_LOCATION_SOURCE_ID: response["id"],
+                PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP: True
+            }
         )
         pods = self.parse_fuels(await self._send_request(
             url=CONST_PODPOINT_LOCATION.format(
