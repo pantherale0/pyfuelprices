@@ -128,6 +128,8 @@ class PodPointSource(Source):
                 continue
             if "price" not in f:
                 continue
+            if not isinstance(f["price"], dict):
+                continue
             if "cost" not in f["price"]:
                 continue
             if not isinstance(f["price"]["cost"], list):
