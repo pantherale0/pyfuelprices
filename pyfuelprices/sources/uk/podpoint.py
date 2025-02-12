@@ -101,6 +101,7 @@ class PodPointSource(Source):
             self.location_cache[site_id].add_or_update_fuel(pod)
             self.location_cache[site_id].next_update=self.next_update
             self.location_cache[site_id].last_updated=datetime.now()
+        _LOGGER.debug("Parsed object %s", response["id"])
 
     def parse_fuels(self, fuels: list[dict]):
         """Parse fuels."""
@@ -113,6 +114,14 @@ class PodPointSource(Source):
             if not isinstance(f["unit_connectors"], list):
                 continue
             if len(f["unit_connectors"]) == 0:
+                continue
+            if "price" not in f:
+                continue
+            if "cost" not in f:
+                continue
+            if not isinstance(f["price"]["cost"], list):
+                continue
+            if len(f["price"]["cost"]) == 0:
                 continue
             connector = f["unit_connectors"][0]['connector']
             fuels_parsed.append(Fuel(
@@ -136,6 +145,6 @@ class PodPointSource(Source):
                 coros = [self.update_area(a) for a in self._configured_areas]
                 await asyncio.gather(*coros)
             except Exception as exc:
-                _LOGGER.error(exc)
+                _LOGGER.exception(exc, exc_info=exc)
 
         return list(self.location_cache.values())
