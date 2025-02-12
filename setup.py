@@ -25,7 +25,7 @@ DEV_REQUIREMENTS = [
     'build == 0.10.*',
     'flake8 == 6.*',
     'isort == 5.*',
-    'mypy == 1.5.*',
+    'mypy >= 1.5,< 1.16',
     'pytest == 7.*',
     'pytest-cov == 4.*',
     'twine == 4.*',
