@@ -98,7 +98,7 @@ async def main():
         except Exception as exc:
             pass
         for loc in await data.find_fuel_locations_from_point(
-            coordinates=(52.041627, -0.759651),
+            coordinates=(52.040616, -0.768702),
             radius=5.0
         ):
             _LOGGER.info("Found location: %s", loc)

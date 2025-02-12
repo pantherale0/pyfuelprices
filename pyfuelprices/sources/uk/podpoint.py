@@ -77,20 +77,19 @@ class PodPointSource(Source):
         """Retrieves pod details and parses the response."""
         _LOGGER.debug("Parsing object %s", response["id"])
         site_id = f"{self.provider_name}_{response['id']}"
-        if site_id not in self.location_cache:
-            self.location_cache[site_id] = FuelLocation.create(
-                site_id=site_id,
-                name=response["name"],
-                address="See properties",
-                lat=response["location"]["lat"],
-                long=response["location"]["lng"],
-                brand="Pod Point",
-                available_fuels=[],
-                currency="GBP",
-                postal_code=response["address"]["postcode"],
-                next_update=self.next_update,
-                props=response
-            )
+        fs = FuelLocation.create(
+            site_id=site_id,
+            name=response["name"],
+            address="See properties",
+            lat=response["location"]["lat"],
+            long=response["location"]["lng"],
+            brand="Pod Point",
+            available_fuels=[],
+            currency="GBP",
+            postal_code=response["address"]["postcode"],
+            next_update=self.next_update,
+            props=response
+        )
         pods = self.parse_fuels(await self._send_request(
             url=CONST_PODPOINT_LOCATION.format(
                 BASE=CONST_PODPOINT_BASE,
@@ -98,9 +97,13 @@ class PodPointSource(Source):
             )
         ))
         for pod in pods:
-            self.location_cache[site_id].add_or_update_fuel(pod)
-            self.location_cache[site_id].next_update=self.next_update
-            self.location_cache[site_id].last_updated=datetime.now()
+            fs.add_or_update_fuel(pod)
+            fs.next_update=self.next_update
+            fs.last_updated=datetime.now()
+        if site_id not in self.location_cache:
+            self.location_cache[site_id] = fs
+        else:
+            self.location_cache.get(site_id).update(fs)
         _LOGGER.debug("Parsed object %s", response["id"])
 
     def parse_fuels(self, fuels: list[dict]):
@@ -117,7 +120,7 @@ class PodPointSource(Source):
                 continue
             if "price" not in f:
                 continue
-            if "cost" not in f:
+            if "cost" not in f["price"]:
                 continue
             if not isinstance(f["price"]["cost"], list):
                 continue
