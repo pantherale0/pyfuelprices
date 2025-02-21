@@ -21,13 +21,13 @@ class FuelPrices:
     configured_areas: list[dict] = []
     _accessed_sites: dict[str, str] = {}
     client_session: aiohttp.ClientSession = None
-
+    _semaphore: asyncio.Semaphore = asyncio.Semaphore(4)
     async def update(self, force: bool=False):
         """Main data fetch / update handler."""
         async def update_src(s: Source, a: list[dict], f: bool):
             """Update source."""
             try:
-                async with asyncio.Semaphore(4):
+                async with self._semaphore:
                     await s.update(areas=a, force=f)
             except TimeoutError as err:
                 _LOGGER.warning("Timeout updating %s: %s", s.provider_name, err)
@@ -82,7 +82,7 @@ class FuelPrices:
         """Retrieve the fuel cost from a single point."""
         async def dynamic_build(l: dict):
             """Function for asyncio to retrieve fuels quickly."""
-            async with asyncio.Semaphore(5):
+            async with self._semaphore:
                 await self.get_fuel_location(
                     l["id"],
                     str(l["props"]["source"]).lower()
