@@ -7,7 +7,12 @@ from datetime import timedelta
 
 import aiohttp
 
-from pyfuelprices.sources import Source, geocode_reverse_lookup, UpdateFailedError
+from pyfuelprices.sources import (
+    Source,
+    geocode_reverse_lookup,
+    UpdateFailedError,
+    SupportsConfigType
+)
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP, FULL_COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
 from .fuel_locations import FuelLocation
@@ -110,6 +115,13 @@ class FuelPrices:
                     })
         return sorted(fuels, key=lambda item: item["cost"])
 
+    @staticmethod
+    def source_config_type(source_shortcode: str) -> SupportsConfigType:
+        """Return the config type of a given source."""
+        if source_shortcode not in SOURCE_MAP:
+            raise ValueError(f"Source {source_shortcode} not found")
+        return SOURCE_MAP[source_shortcode][0].attr_config_type()
+
     @classmethod
     def create(cls,
                enabled_sources: list[str] = None,
@@ -117,13 +129,16 @@ class FuelPrices:
                country_code: str = "",
                configured_areas: list[dict] = None,
                timeout: timedelta = timedelta(seconds=30),
-               client_session = None
+               client_session = None,
+               source_config = None,
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
         self.configured_areas = configured_areas
         if client_session is not None:
             self.client_session = client_session
+        if source_config is None:
+            source_config = {}
         else:
             self.client_session = aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(
@@ -134,30 +149,25 @@ class FuelPrices:
                     total=timeout.seconds
                 )
             )
-        if enabled_sources is not None:
-            for src in enabled_sources:
-                if str(src) not in SOURCE_MAP:
-                    _LOGGER.error("Source %s is not valid for this application.", src)
-                    continue
-                if SOURCE_MAP.get(str(src))[1] == 0:
-                    _LOGGER.error("Source %s has been disabled.", src)
-                    continue
-                self.configured_sources[src] = (
-                    SOURCE_MAP.get(str(src))[0](update_interval=update_interval,
-                                             client_session=self.client_session)
-                )
         if enabled_sources is None:
-            def_sources = {}
-            if country_code != "":
-                def_sources = COUNTRY_MAP.get(country_code.upper(), [])
-            for src in def_sources:
-                if SOURCE_MAP.get(str(src))[1] == 0:
-                    _LOGGER.error("Source %s has been disabled.", src)
-                    continue
-                self.configured_sources[src] = (
-                    SOURCE_MAP.get(str(src))(update_interval=update_interval,
-                                             client_session=self.client_session)
-                )
+            enabled_sources=COUNTRY_MAP.get(country_code.upper(), [])
+    
+        for src in enabled_sources:
+            if src not in SOURCE_MAP:
+                _LOGGER.error("Source %s is not valid for this application.", src)
+                continue
+            if SOURCE_MAP.get(str(src))[1] == 0:
+                _LOGGER.error("Source %s has been disabled.", src)
+                continue
+            if ((cls.source_config_type(src) == SupportsConfigType.REQUIRES_ONLY) or (
+                cls.source_config_type(src) == SupportsConfigType.REQUIRES_AND_OPTIONAL
+            )) and src not in source_config:
+                _LOGGER.error("Source %s is not available, not configured.", src)
+                continue
+            self.configured_sources[src] = (
+                SOURCE_MAP.get(src)[0](update_interval=update_interval,
+                                            client_session=self.client_session,
+                                            configuration=source_config.get("configuration", {})))
 
         return self
 

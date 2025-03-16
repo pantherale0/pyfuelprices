@@ -14,6 +14,7 @@ from geopy import (
     exc as geopyexc
 )
 import aiohttp
+import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -23,6 +24,8 @@ from pyfuelprices.const import (
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
 from pyfuelprices.helpers import geocode_reverse_lookup
+
+from .enum import SupportsConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +44,12 @@ class Source:
     next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
+    configuration: dict | None = None
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1),
-                 client_session: aiohttp.ClientSession = None) -> None:
+                 client_session: aiohttp.ClientSession = None,
+                 configuration: dict | None = None) -> None:
         """Start a new instance of a source."""
         self.update_interval = update_interval
         self._client_session: aiohttp.ClientSession = client_session
@@ -56,6 +61,7 @@ class Source:
             self._client_session = client_session
         if self.next_update is None:
             self.next_update = datetime.now()
+        self.configuration = configuration
 
     @final
     def _check_if_coord_in_area(self, coordinates) -> bool:
@@ -155,6 +161,15 @@ class Source:
         This is used as part of parse_response."""
         raise NotImplementedError("This function is not available for this module.")
 
+    @staticmethod
+    def attr_config_type() -> SupportsConfigType:
+        """Return the source config type."""
+        return SupportsConfigType.NONE
+
+    @staticmethod
+    def attr_config() -> vol.Schema | None:
+        """Return the config mapping."""
+        return None
 
 class UpdateFailedError(Exception):
     """Update failure exception."""
