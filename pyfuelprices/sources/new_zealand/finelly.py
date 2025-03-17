@@ -25,6 +25,11 @@ from pyfuelprices.sources import Source, SupportsConfigType
 from .const import FINELLY_FUEL_API
 
 _LOGGER = logging.getLogger(__name__)
+CONFIG = vol.Schema(
+    {
+        vol.Required("USER_ID"): str
+    }
+)
 
 class FinellyDataSource(Source):
     """Core Finelly source."""
@@ -32,6 +37,8 @@ class FinellyDataSource(Source):
     provider_name="finelly"
     location_cache: dict[str, FuelLocation] = {}
     update_interval = timedelta(hours=12)
+    attr_config_type = SupportsConfigType.REQUIRES_ONLY
+    attr_config = CONFIG
 
     def _build_request_url(self, lat: float, long: float, radius: float):
         """Build a valid request URL."""
@@ -57,7 +64,7 @@ class FinellyDataSource(Source):
         if not response.ok:
             _LOGGER.error("Error communicating with Finelly API.")
             return
-        await self.parse_response(response)
+        await self.parse_response(await response.json())
 
     async def update(self, areas=None, force=False):
         """Update Finelly areas."""
@@ -132,19 +139,3 @@ class FinellyDataSource(Source):
                 props=x
             ) for x in fuels
         ]
-
-    @staticmethod
-    @property
-    def attr_config_type() -> SupportsConfigType:
-        """Return the source config type."""
-        return SupportsConfigType.REQUIRES_ONLY
-
-    @staticmethod
-    @property
-    def attr_config() -> vol.Schema | None:
-        """Return the config mapping."""
-        return vol.Schema(
-            {
-                vol.Required("USER_ID"): str
-            }
-        )

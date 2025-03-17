@@ -167,7 +167,7 @@ class FuelPrices:
             self.configured_sources[src] = (
                 SOURCE_MAP.get(src)[0](update_interval=update_interval,
                                             client_session=self.client_session,
-                                            configuration=source_config.get("configuration", {})))
+                                            configuration=source_config.get(src, {})))
 
         return self
 

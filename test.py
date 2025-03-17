@@ -4,15 +4,26 @@ import asyncio
 
 from datetime import timedelta
 
-from pyfuelprices import FuelPrices
+import voluptuous as vol
+
+from pyfuelprices import FuelPrices, SOURCE_MAP, SupportsConfigType
 from pyfuelprices.const import PROP_AREA_LAT, PROP_AREA_LONG, PROP_AREA_RADIUS
 
 _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
+    enabled_sources=["finelly"]
+    configs = {}
+    for src in enabled_sources:
+        if src in SOURCE_MAP:
+            if SOURCE_MAP[src][0].requires_config():
+                schema: vol.Schema = SOURCE_MAP[src][0].attr_config
+                for attr in schema.schema:
+                    configs.setdefault(src, {})
+                    configs[src][str(attr)] = input("Enter a value for " + str(attr) + ": ")
     data = FuelPrices.create(
-        enabled_sources=["podpoint"],
+        enabled_sources=enabled_sources,
         configured_areas=[
             {
                 PROP_AREA_RADIUS: 5.0,
@@ -90,7 +101,8 @@ async def main():
             #     PROP_AREA_RADIUS: 25.0 # Slovenia
             # },
         ],
-        update_interval=timedelta(minutes=5)
+        update_interval=timedelta(minutes=5),
+        source_config=configs
     )
     while True:
         try:

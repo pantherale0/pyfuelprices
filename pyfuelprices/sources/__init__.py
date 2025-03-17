@@ -28,6 +28,7 @@ from pyfuelprices.helpers import geocode_reverse_lookup
 from .enum import SupportsConfigType
 
 _LOGGER = logging.getLogger(__name__)
+BASE_CONFIG = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 class Source:
     """Base source, all instances inherit this."""
@@ -45,6 +46,8 @@ class Source:
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
     configuration: dict | None = None
+    attr_config_type: SupportsConfigType = SupportsConfigType.NONE
+    attr_config = BASE_CONFIG
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1),
@@ -171,17 +174,12 @@ class Source:
             return True
         self.attr_config(configuration)
 
-    @staticmethod
-    @property
-    def attr_config_type() -> SupportsConfigType:
-        """Return the source config type."""
-        return SupportsConfigType.NONE
-
-    @staticmethod
-    @property
-    def attr_config() -> vol.Schema | None:
-        """Return the config mapping."""
-        return vol.Schema({}, extra=vol.ALLOW_EXTRA)
+    @classmethod
+    @final
+    def requires_config(cls) -> bool:
+        """Check if this instance requires additional config before usage."""
+        return (cls.attr_config_type == SupportsConfigType.REQUIRES_ONLY or
+                cls.attr_config_type == SupportsConfigType.REQUIRES_AND_OPTIONAL)
 
 class UpdateFailedError(Exception):
     """Update failure exception."""
