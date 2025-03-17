@@ -10,12 +10,13 @@ import aiohttp
 from pyfuelprices.sources import (
     Source,
     geocode_reverse_lookup,
-    UpdateFailedError,
-    SupportsConfigType
+    UpdateFailedError
 )
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP, FULL_COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
+from .enum import SupportsConfigType
 from .fuel_locations import FuelLocation
+from .schemas import BASE_CONFIG_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class FuelPrices:
 
     configured_sources: dict[str, Source] = {}
     configured_areas: list[dict] = []
+    _global_config: dict = {}
     _accessed_sites: dict[str, str] = {}
     client_session: aiohttp.ClientSession = None
     _semaphore: asyncio.Semaphore = asyncio.Semaphore(4)
@@ -122,6 +124,14 @@ class FuelPrices:
             raise ValueError(f"Source {source_shortcode} not found")
         return SOURCE_MAP[source_shortcode][0].attr_config_type
 
+    @staticmethod
+    def source_requires_config(source_shortcode: str) -> bool:
+        """Return true if the source requires config before using."""
+        return (
+            FuelPrices.source_config_type(source_shortcode) in
+            [SupportsConfigType.REQUIRES_AND_OPTIONAL, SupportsConfigType.REQUIRES_ONLY]
+        )
+
     @classmethod
     def create(cls,
                enabled_sources: list[str] = None,
@@ -137,8 +147,6 @@ class FuelPrices:
         self.configured_areas = configured_areas
         if client_session is not None:
             self.client_session = client_session
-        if source_config is None:
-            source_config = {}
         else:
             self.client_session = aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(
@@ -149,6 +157,10 @@ class FuelPrices:
                     total=timeout.seconds
                 )
             )
+
+        if source_config is None:
+            source_config = {}
+        BASE_CONFIG_SCHEMA(source_config)
         if enabled_sources is None:
             enabled_sources=COUNTRY_MAP.get(country_code.upper(), [])
 
@@ -168,7 +180,7 @@ class FuelPrices:
                 SOURCE_MAP.get(src)[0](update_interval=update_interval,
                                             client_session=self.client_session,
                                             configuration=source_config.get(src, {})))
-
+        self._global_config = source_config.get("global", {})
         return self
 
 class UpdateExceptionGroup(Exception):

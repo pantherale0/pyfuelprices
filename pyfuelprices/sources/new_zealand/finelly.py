@@ -20,7 +20,8 @@ from pyfuelprices.build_data import (
     FINELLY_URL
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.sources import Source, SupportsConfigType
+from pyfuelprices.enum import SupportsConfigType
+from pyfuelprices.sources import Source
 
 from .const import FINELLY_FUEL_API
 

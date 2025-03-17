@@ -1,6 +1,12 @@
-"""Fuel Price enums."""
+"""pyfuelprices enum."""
 
 from enum import StrEnum
+
+class UnitMode(StrEnum):
+    """Define set unit modes."""
+    MILE="mile"
+    KILOMETRE="kilometre"
+    METRE="metre"
 
 class SupportsConfigType(StrEnum):
     """Define the type of configurations a datasource supports."""
