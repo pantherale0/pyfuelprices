@@ -120,7 +120,7 @@ class FuelPrices:
         """Return the config type of a given source."""
         if source_shortcode not in SOURCE_MAP:
             raise ValueError(f"Source {source_shortcode} not found")
-        return SOURCE_MAP[source_shortcode][0].attr_config_type()
+        return SOURCE_MAP[source_shortcode][0].attr_config_type
 
     @classmethod
     def create(cls,

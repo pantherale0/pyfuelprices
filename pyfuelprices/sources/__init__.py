@@ -61,6 +61,7 @@ class Source:
             self._client_session = client_session
         if self.next_update is None:
             self.next_update = datetime.now()
+        self._validate_config(configuration)
         self.configuration = configuration
 
     @final
@@ -161,15 +162,26 @@ class Source:
         This is used as part of parse_response."""
         raise NotImplementedError("This function is not available for this module.")
 
+    @final
+    def _validate_config(self, configuration: dict):
+        """Validate a given config."""
+        if self.attr_config_type == SupportsConfigType.NONE:
+            return True
+        if self.attr_config is None:
+            return True
+        self.attr_config(configuration)
+
     @staticmethod
+    @property
     def attr_config_type() -> SupportsConfigType:
         """Return the source config type."""
         return SupportsConfigType.NONE
 
     @staticmethod
+    @property
     def attr_config() -> vol.Schema | None:
         """Return the config mapping."""
-        return None
+        return vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 class UpdateFailedError(Exception):
     """Update failure exception."""
