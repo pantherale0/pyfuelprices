@@ -151,7 +151,7 @@ class FuelPrices:
             )
         if enabled_sources is None:
             enabled_sources=COUNTRY_MAP.get(country_code.upper(), [])
-    
+
         for src in enabled_sources:
             if src not in SOURCE_MAP:
                 _LOGGER.error("Source %s is not valid for this application.", src)
