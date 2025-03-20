@@ -7,10 +7,16 @@ from datetime import timedelta
 
 import aiohttp
 
-from pyfuelprices.sources import Source, geocode_reverse_lookup, UpdateFailedError
+from pyfuelprices.sources import (
+    Source,
+    geocode_reverse_lookup,
+    UpdateFailedError
+)
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP, FULL_COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
+from .enum import SupportsConfigType
 from .fuel_locations import FuelLocation
+from .schemas import BASE_CONFIG_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +25,7 @@ class FuelPrices:
 
     configured_sources: dict[str, Source] = {}
     configured_areas: list[dict] = []
+    _global_config: dict = {}
     _accessed_sites: dict[str, str] = {}
     client_session: aiohttp.ClientSession = None
     _semaphore: asyncio.Semaphore = asyncio.Semaphore(4)
@@ -110,18 +117,40 @@ class FuelPrices:
                     })
         return sorted(fuels, key=lambda item: item["cost"])
 
+    @staticmethod
+    def get_source_config_schema(source_shortcode: str):
+        """Return the config schema for a given source."""
+        if source_shortcode not in SOURCE_MAP:
+            raise ValueError(f"Source {source_shortcode} not found")
+        return SOURCE_MAP[source_shortcode][0].attr_config
+
+    @staticmethod
+    def source_config_type(source_shortcode: str) -> SupportsConfigType:
+        """Return the config type of a given source."""
+        if source_shortcode not in SOURCE_MAP:
+            raise ValueError(f"Source {source_shortcode} not found")
+        return SOURCE_MAP[source_shortcode][0].attr_config_type
+
+    @staticmethod
+    def source_requires_config(source_shortcode: str) -> bool:
+        """Return true if the source requires config before using."""
+        return (
+            FuelPrices.source_config_type(source_shortcode) in
+            [SupportsConfigType.REQUIRES_AND_OPTIONAL, SupportsConfigType.REQUIRES_ONLY]
+        )
+
     @classmethod
     def create(cls,
-               enabled_sources: list[str] = None,
-               update_interval: timedelta = timedelta(days=1),
-               country_code: str = "",
-               configured_areas: list[dict] = None,
-               timeout: timedelta = timedelta(seconds=30),
-               client_session = None
+               client_session = None,
+               configuration = None,
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
-        self.configured_areas = configured_areas
+        if configuration is None:
+            configuration = {}
+        BASE_CONFIG_SCHEMA(configuration)
+        self.configured_areas = configuration.get("areas")
+        enabled_sources = list(configuration.get("providers", {}).keys())
         if client_session is not None:
             self.client_session = client_session
         else:
@@ -131,34 +160,34 @@ class FuelPrices:
                     ttl_dns_cache=360
                 ),
                 timeout=aiohttp.ClientTimeout(
-                    total=timeout.seconds
+                    total=configuration.get("timeout", 30)
                 )
             )
-        if enabled_sources is not None:
-            for src in enabled_sources:
-                if str(src) not in SOURCE_MAP:
-                    _LOGGER.error("Source %s is not valid for this application.", src)
-                    continue
-                if SOURCE_MAP.get(str(src))[1] == 0:
-                    _LOGGER.error("Source %s has been disabled.", src)
-                    continue
-                self.configured_sources[src] = (
-                    SOURCE_MAP.get(str(src))[0](update_interval=update_interval,
-                                             client_session=self.client_session)
-                )
-        if enabled_sources is None:
-            def_sources = {}
-            if country_code != "":
-                def_sources = COUNTRY_MAP.get(country_code.upper(), [])
-            for src in def_sources:
-                if SOURCE_MAP.get(str(src))[1] == 0:
-                    _LOGGER.error("Source %s has been disabled.", src)
-                    continue
-                self.configured_sources[src] = (
-                    SOURCE_MAP.get(str(src))(update_interval=update_interval,
-                                             client_session=self.client_session)
-                )
 
+        if enabled_sources is None:
+            enabled_sources=COUNTRY_MAP.get(configuration.get("country_code", "").upper(), [])
+
+        for src in enabled_sources:
+            if src not in SOURCE_MAP:
+                _LOGGER.error("Source %s is not valid for this application.", src)
+                continue
+            if SOURCE_MAP.get(str(src))[1] == 0:
+                _LOGGER.error("Source %s has been disabled.", src)
+                continue
+            if ((cls.source_config_type(src) == SupportsConfigType.REQUIRES_ONLY) or (
+                cls.source_config_type(src) == SupportsConfigType.REQUIRES_AND_OPTIONAL
+            )) and src not in configuration["providers"]:
+                _LOGGER.error("Source %s is not available, not configured.", src)
+                continue
+            self.configured_sources[src] = (
+                SOURCE_MAP.get(src)[0](
+                    update_interval=timedelta(hours=configuration.get(
+                        "update_interval", 24
+                    )),
+                    client_session=self.client_session,
+                    configuration=configuration["providers"].get(src, {}))
+                )
+        self._global_config = configuration.get("global", {})
         return self
 
 class UpdateExceptionGroup(Exception):

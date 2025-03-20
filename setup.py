@@ -17,6 +17,7 @@ REQUIREMENTS = [
     # 'numpy == 1.26.0',
     # 'scikit-learn == 1.3.0',
     'geopy == 2.4.1',
+    'voluptuous >= 0.10'
 ]
 
 DEV_REQUIREMENTS = [

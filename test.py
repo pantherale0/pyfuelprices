@@ -2,18 +2,19 @@
 import logging
 import asyncio
 
-from datetime import timedelta
+import voluptuous as vol
 
-from pyfuelprices import FuelPrices
+from pyfuelprices import FuelPrices, SOURCE_MAP
 from pyfuelprices.const import PROP_AREA_LAT, PROP_AREA_LONG, PROP_AREA_RADIUS
 
 _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
-    data = FuelPrices.create(
-        enabled_sources=["podpoint"],
-        configured_areas=[
+    enabled_sources=["finelly"]
+    configs = {
+        "providers": {},
+        "areas": [
             {
                 PROP_AREA_RADIUS: 5.0,
                 PROP_AREA_LAT: 52.041627,
@@ -64,11 +65,11 @@ async def main():
             #     PROP_AREA_LONG: 153.036804,
             #     PROP_AREA_RADIUS: 15.0 # AUS (FuelSnoop)
             # },
-            # {
-            #     PROP_AREA_LAT: -36.975624329980654,
-            #     PROP_AREA_LONG: 174.78417701477935,
-            #     PROP_AREA_RADIUS: 15.0 # NZ (PetrolSpy)
-            # },
+            {
+                PROP_AREA_LAT: -36.789642,
+                PROP_AREA_LONG: 174.728652,
+                PROP_AREA_RADIUS: 15.0 # NZ (PetrolSpy)
+            },
             # {
             #     PROP_AREA_LAT: 46.945200,
             #     PROP_AREA_LONG: 7.464844,
@@ -90,8 +91,16 @@ async def main():
             #     PROP_AREA_RADIUS: 25.0 # Slovenia
             # },
         ],
-        update_interval=timedelta(minutes=5)
-    )
+        "country_code": ""
+    }
+    for src in enabled_sources:
+        if src in SOURCE_MAP:
+            if FuelPrices.source_requires_config(src):
+                schema: vol.Schema = SOURCE_MAP[src][0].attr_config
+                for attr in schema.schema:
+                    configs["providers"].setdefault(src, {})
+                    configs["providers"][src][str(attr)] = input("Enter a value for " + str(attr) + ": ")
+    data = FuelPrices.create(configuration=configs)
     while True:
         try:
             await data.update()

@@ -14,6 +14,9 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID,
 )
+from pyfuelprices.build_data import (
+    GASPASS_URL
+)
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
     Source,
@@ -24,8 +27,7 @@ from pyfuelprices.sources import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONST_API_HOST = "https://gaspassproxy2-dhf8a6aphxbng9g4.brazilsouth-01.azurewebsites.net"
-CONST_GET_FUELS = f"{CONST_API_HOST}/api/v1/gaspass/"
+CONST_GET_FUELS = f"{GASPASS_URL}/api/v1/gaspass/"
 CONST_FUELS = [
     "ultimo_preco_alcool",
     "ultimo_preco_diesel",

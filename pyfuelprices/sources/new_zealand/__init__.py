@@ -1,6 +1,9 @@
-"""Canadian sources."""
+"""New Zealand sources."""
 
-from pyfuelprices.sources.australia import SOURCE_MAP as AU_SOURCE_MAP
+from pyfuelprices.sources.australia.petrolspy import PetrolSpySource
+from .finelly import FinellyDataSource
 
-SOURCE_MAP = {}
-SOURCE_MAP["petrolspy"] = AU_SOURCE_MAP["petrolspy"]
+SOURCE_MAP = {
+    "finelly": (FinellyDataSource, 1, 1, 0,),
+    "petrolspy": (PetrolSpySource, 1, 1,),
+}

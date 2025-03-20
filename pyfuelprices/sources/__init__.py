@@ -14,6 +14,7 @@ from geopy import (
     exc as geopyexc
 )
 import aiohttp
+import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -23,6 +24,8 @@ from pyfuelprices.const import (
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
 from pyfuelprices.helpers import geocode_reverse_lookup
+from pyfuelprices.enum import SupportsConfigType
+from pyfuelprices.schemas import SOURCE_BASE_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +44,14 @@ class Source:
     next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
+    configuration: dict | None = None
+    attr_config_type: SupportsConfigType = SupportsConfigType.NONE
+    attr_config = SOURCE_BASE_CONFIG
 
     def __init__(self,
                  update_interval: timedelta = timedelta(days=1),
-                 client_session: aiohttp.ClientSession = None) -> None:
+                 client_session: aiohttp.ClientSession = None,
+                 configuration: dict | None = None) -> None:
         """Start a new instance of a source."""
         self.update_interval = update_interval
         self._client_session: aiohttp.ClientSession = client_session
@@ -56,6 +63,8 @@ class Source:
             self._client_session = client_session
         if self.next_update is None:
             self.next_update = datetime.now()
+        self._validate_config(configuration)
+        self.configuration = configuration
 
     @final
     def _check_if_coord_in_area(self, coordinates) -> bool:
@@ -155,6 +164,14 @@ class Source:
         This is used as part of parse_response."""
         raise NotImplementedError("This function is not available for this module.")
 
+    @final
+    def _validate_config(self, configuration: dict):
+        """Validate a given config."""
+        if self.attr_config_type == SupportsConfigType.NONE:
+            return True
+        if self.attr_config is None:
+            return True
+        self.attr_config(configuration)
 
 class UpdateFailedError(Exception):
     """Update failure exception."""
