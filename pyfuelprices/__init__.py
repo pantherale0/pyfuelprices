@@ -141,17 +141,16 @@ class FuelPrices:
 
     @classmethod
     def create(cls,
-               enabled_sources: list[str] = None,
-               update_interval: timedelta = timedelta(days=1),
-               country_code: str = "",
-               configured_areas: list[dict] = None,
-               timeout: timedelta = timedelta(seconds=30),
                client_session = None,
-               source_config = None,
+               configuration = None,
             ) -> 'FuelPrices':
         """Start an instance of fuel prices."""
         self = cls()
-        self.configured_areas = configured_areas
+        if configuration is None:
+            configuration = {}
+        BASE_CONFIG_SCHEMA(configuration)
+        self.configured_areas = configuration.get("areas")
+        enabled_sources = list(configuration.get("providers", {}).keys())
         if client_session is not None:
             self.client_session = client_session
         else:
@@ -161,15 +160,12 @@ class FuelPrices:
                     ttl_dns_cache=360
                 ),
                 timeout=aiohttp.ClientTimeout(
-                    total=timeout.seconds
+                    total=configuration.get("timeout", 30)
                 )
             )
 
-        if source_config is None:
-            source_config = {}
-        BASE_CONFIG_SCHEMA(source_config)
         if enabled_sources is None:
-            enabled_sources=COUNTRY_MAP.get(country_code.upper(), [])
+            enabled_sources=COUNTRY_MAP.get(configuration.get("country_code", "").upper(), [])
 
         for src in enabled_sources:
             if src not in SOURCE_MAP:
@@ -180,14 +176,18 @@ class FuelPrices:
                 continue
             if ((cls.source_config_type(src) == SupportsConfigType.REQUIRES_ONLY) or (
                 cls.source_config_type(src) == SupportsConfigType.REQUIRES_AND_OPTIONAL
-            )) and src not in source_config:
+            )) and src not in configuration["providers"]:
                 _LOGGER.error("Source %s is not available, not configured.", src)
                 continue
             self.configured_sources[src] = (
-                SOURCE_MAP.get(src)[0](update_interval=update_interval,
-                                            client_session=self.client_session,
-                                            configuration=source_config.get(src, {})))
-        self._global_config = source_config.get("global", {})
+                SOURCE_MAP.get(src)[0](
+                    update_interval=timedelta(hours=configuration.get(
+                        "update_interval", 24
+                    )),
+                    client_session=self.client_session,
+                    configuration=configuration["providers"].get(src, {}))
+                )
+        self._global_config = configuration.get("global", {})
         return self
 
 class UpdateExceptionGroup(Exception):

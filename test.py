@@ -2,8 +2,6 @@
 import logging
 import asyncio
 
-from datetime import timedelta
-
 import voluptuous as vol
 
 from pyfuelprices import FuelPrices, SOURCE_MAP
@@ -14,17 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 async def main():
     """Main init."""
     enabled_sources=["finelly"]
-    configs = {}
-    for src in enabled_sources:
-        if src in SOURCE_MAP:
-            if FuelPrices.source_requires_config(src):
-                schema: vol.Schema = SOURCE_MAP[src][0].attr_config
-                for attr in schema.schema:
-                    configs.setdefault(src, {})
-                    configs[src][str(attr)] = input("Enter a value for " + str(attr) + ": ")
-    data = FuelPrices.create(
-        enabled_sources=enabled_sources,
-        configured_areas=[
+    configs = {
+        "providers": {},
+        "areas": [
             {
                 PROP_AREA_RADIUS: 5.0,
                 PROP_AREA_LAT: 52.041627,
@@ -101,9 +91,16 @@ async def main():
             #     PROP_AREA_RADIUS: 25.0 # Slovenia
             # },
         ],
-        update_interval=timedelta(minutes=5),
-        source_config=configs
-    )
+        "country_code": ""
+    }
+    for src in enabled_sources:
+        if src in SOURCE_MAP:
+            if FuelPrices.source_requires_config(src):
+                schema: vol.Schema = SOURCE_MAP[src][0].attr_config
+                for attr in schema.schema:
+                    configs["providers"].setdefault(src, {})
+                    configs["providers"][src][str(attr)] = input("Enter a value for " + str(attr) + ": ")
+    data = FuelPrices.create(configuration=configs)
     while True:
         try:
             await data.update()
