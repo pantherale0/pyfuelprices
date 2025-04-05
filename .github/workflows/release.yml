@@ -15,6 +15,11 @@ jobs:
           filepath="pyfuelprices/_version.py"
           new_version_string="__version__ = \"${{ github.event.release.tag_name }}\""
           sed -i "s/^__version__ = .*$/$new_version_string/" "$filepath"
+      - name: Set Build Parameters
+        run: |
+          filepath="pyfuelprices/build_data.py"
+          sed -i "s/^FINELLY_URL=.*$/FINELLY_URL=\"${{ secrets.FINELLY_URL }}\"/" "$filepath"
+          sed -i "s/^GASPASS_URL=.*$/GASPASS_URL=\"${{ secrets.GASPASS_URL }}\"/" "$filepath"
       - uses: extractions/setup-just@v3
       - uses: actions/setup-python@v5
         with:
