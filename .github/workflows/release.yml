@@ -20,7 +20,7 @@ jobs:
           filepath="pyfuelprices/build_data.py"
           sed -i "s/^FINELLY_URL=.*$/FINELLY_URL=\"${{ secrets.FINELLY_URL }}\"/" "$filepath"
           sed -i "s/^GASPASS_URL=.*$/GASPASS_URL=\"${{ secrets.GASPASS_URL }}\"/" "$filepath"
-      - uses: extractions/setup-just@v2
+      - uses: extractions/setup-just@v3
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
