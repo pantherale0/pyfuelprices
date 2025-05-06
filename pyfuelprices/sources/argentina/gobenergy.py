@@ -91,7 +91,7 @@ class GobEnergySource(Source):
             _LOGGER.error("Error sending request to %s: %s",
                         self.provider_name,
                         response)
-            return True
+            return False
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
