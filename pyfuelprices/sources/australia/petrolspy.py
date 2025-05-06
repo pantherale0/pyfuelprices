@@ -1,10 +1,7 @@
 """FuelSnoop data source for Australia (QLD)."""
 
-from datetime import datetime
 import logging
 import json
-
-from geopy import distance
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -15,7 +12,7 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.helpers import get_bounding_box
+from pyfuelprices.helpers import geocoder
 from pyfuelprices.sources import Source
 
 from .const import PETROLSPY_API_HEADERS, PETROLSPY_API_SITES
@@ -59,30 +56,27 @@ class PetrolSpySource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler to look all products."""
-        self._configured_areas=[] if areas is None else areas
-        if datetime.now() > self.next_update or force:
-            for area in self._configured_areas:
-                _LOGGER.debug("Searching PetrolSpy for FuelLocations at area %s",
-                              area)
-                bbox = get_bounding_box(
-                    area[PROP_AREA_LAT],
-                    area[PROP_AREA_LONG],
-                    area[PROP_AREA_RADIUS]
-                )
-                response_raw = await self._send_request(
-                    url=PETROLSPY_API_SITES.format(
-                        LAT_MAX=bbox.lat_max,
-                        LNG_MAX=bbox.lon_max,
-                        LAT_MIN=bbox.lat_min,
-                        LNG_MIN=bbox.lon_min
-                    )
-                )
-                if response_raw is not None:
-                    await self.parse_response(json.loads(response_raw))
-            self.next_update += self.update_interval
-            return list(self.location_cache.values())
+    async def update_area(self, area) -> bool:
+        """Update a given area."""
+        _LOGGER.debug("Searching PetrolSpy for FuelLocations at area %s",
+                        area)
+        bbox = geocoder.get_bounding_box(
+            area[PROP_AREA_LAT],
+            area[PROP_AREA_LONG],
+            area[PROP_AREA_RADIUS]
+        )
+        response_raw = await self._send_request(
+            url=PETROLSPY_API_SITES.format(
+                LAT_MAX=bbox.lat_max,
+                LNG_MAX=bbox.lon_max,
+                LAT_MIN=bbox.lat_min,
+                LNG_MIN=bbox.lon_min
+            )
+        )
+        if response_raw is not None:
+            await self.parse_response(json.loads(response_raw))
+            return True
+        return False
 
     async def parse_response(self, response) -> list[FuelLocation]:
         for station in response["message"]["list"]:

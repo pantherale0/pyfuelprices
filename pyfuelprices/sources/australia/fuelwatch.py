@@ -92,11 +92,9 @@ class FuelWatchSource(Source):
                 )
             )
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
+    async def update(self, areas=None, force=False) -> list[FuelLocation]:
         """Custom update handler to look all products."""
-        # _df_columns = ["lat", "long"]
-        # _df_data = []
-        if datetime.now() > self.next_update:
+        if datetime.now() > self.next_update or force:
             if len(self._fuel_products) == 0:
                 await self.get_fuel_products()
             for product in self._fuel_products:
@@ -117,8 +115,14 @@ class FuelWatchSource(Source):
             self.next_update += self.update_interval
             return list(self.location_cache.values())
 
+    async def update_area(self, area) -> bool:
+        """Method not used."""
+        raise NotImplementedError
+
     async def parse_response(self, response) -> list[FuelLocation]:
         """Method not used."""
+        raise NotImplementedError
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Method not used."""
+        raise NotImplementedError

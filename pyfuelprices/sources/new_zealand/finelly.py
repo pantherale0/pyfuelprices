@@ -51,7 +51,7 @@ class FinellyDataSource(Source):
             USER=self.configuration["USER_ID"]
         )
 
-    async def update_area(self, area: dict):
+    async def update_area(self, area: dict) -> bool:
         """Update a given area."""
         response = await self._client_session.get(
             url=self._build_request_url(
@@ -61,23 +61,12 @@ class FinellyDataSource(Source):
             )
         )
         if response is None:
-            return
+            return False
         if not response.ok:
             _LOGGER.error("Error communicating with Finelly API.")
-            return
+            return False
         await self.parse_response(await response.json())
-
-    async def update(self, areas=None, force=False):
-        """Update Finelly areas."""
-        self._configured_areas = areas or []
-        self._clear_cache()
-        if self.next_update > datetime.now() and not force:
-            return
-        coros = [
-            self.update_area(a) for a in self._configured_areas
-        ]
-        await asyncio.gather(*coros)
-        return list(self.location_cache.values())
+        return True
 
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""

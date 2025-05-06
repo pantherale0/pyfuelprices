@@ -15,11 +15,10 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
     DESKTOP_USER_AGENT
 )
+from pyfuelprices.helpers import geocoder, geopyexc
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
-    Source,
-    geocode_reverse_lookup,
-    geopyexc
+    Source
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,43 +56,40 @@ class ComparisSource(Source):
                     _LOGGER.debug("Content within script tag with id='__NEXT_DATA__':")
                     return extracted_content
                 else:
-                    _LOGGER.error("Script tag with id='__NEXT_DATA__' not found in the HTML content.")
+                    _LOGGER.error(
+                        "Script tag with id='__NEXT_DATA__' not found in the HTML content."
+                    )
             _LOGGER.error("Error sending request to %s: %s",
                             url,
                             response)
             return "{}"
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler as this needs to query Comparis on areas."""
-        if datetime.now() > self.next_update:
-            self._configured_areas=[] if areas is None else areas
-            for area in self._configured_areas:
-                try:
-                    geocode = await geocode_reverse_lookup(
-                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    )
-                except geopyexc.GeocoderTimedOut:
-                    _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                    area)
-                    continue
-                if geocode.raw["address"]["country_code"] != "ch":
-                    _LOGGER.debug("Skipping area %s as not in CH.",
-                                area)
-                    continue
-                response_raw = json.loads(await self._send_request(
-                    postcode=geocode.raw["address"]["postcode"],
-                    radius=area[PROP_AREA_RADIUS]
-                ))
-                
-                if len(response_raw) != 0:
-                    response_raw = response_raw["props"]["pageProps"]
-                    await self.parse_response(response_raw["data"])
-                else:
-                    _LOGGER.error("Error sending request to %s: %s",
-                                self.provider_name,
-                                response_raw)
-            self.next_update += self.update_interval
-        return list(self.location_cache.values())
+    async def update_area(self, area) -> bool:
+        """Update a given area."""
+        try:
+            geocode = await geocoder.geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return False
+        if geocode.raw["address"]["country_code"] != "ch":
+            _LOGGER.debug("Skipping area %s as not in CH.",
+                        area)
+            return False
+        response_raw = json.loads(await self._send_request(
+            postcode=geocode.raw["address"]["postcode"],
+            radius=area[PROP_AREA_RADIUS]
+        ))
+        if len(response_raw) != 0:
+            response_raw = response_raw["props"]["pageProps"]
+            await self.parse_response(response_raw["data"])
+            return True
+        _LOGGER.error("Error sending request to %s: %s",
+                    self.provider_name,
+                    response_raw)
+        return False
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""
@@ -147,7 +143,7 @@ class ComparisSource(Source):
         """Parse fuel data from Comparis."""
         fuels_parsed = []
         for k in fuels:
-            if fuels[k] != None:
+            if fuels[k] is not None:
                 fuels_parsed.append(Fuel(
                     fuel_type=str(k).upper(),
                     cost=fuels[k]["displayPrice"],

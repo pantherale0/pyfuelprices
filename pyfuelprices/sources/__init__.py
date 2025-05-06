@@ -1,20 +1,13 @@
 """Data sources and translators for pyfuelprices."""
 
+import asyncio
 import logging
-import json
-import csv
-
 from datetime import timedelta, datetime
 from typing import final
 from geopy import (
-    distance,
-    Nominatim,
-    location,
-    adapters,
-    exc as geopyexc
+    distance   
 )
 import aiohttp
-import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -23,7 +16,6 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.helpers import geocode_reverse_lookup
 from pyfuelprices.enum import SupportsConfigType
 from pyfuelprices.schemas import SOURCE_BASE_CONFIG
 
@@ -40,7 +32,7 @@ class Source:
     _timeout: int = 30
     _configured_areas: list[dict] = []
     _client_session: aiohttp.ClientSession = None
-    update_interval: timedelta = timedelta(days=1)
+    update_interval: timedelta = None
     next_update: datetime = datetime.now()
     provider_name: str = ""
     location_cache: dict[str, FuelLocation] = None
@@ -49,11 +41,17 @@ class Source:
     attr_config = SOURCE_BASE_CONFIG
 
     def __init__(self,
+                 configured_areas: list[dict] = None,
                  update_interval: timedelta = timedelta(days=1),
                  client_session: aiohttp.ClientSession = None,
                  configuration: dict | None = None) -> None:
         """Start a new instance of a source."""
-        self.update_interval = update_interval
+        self._configured_areas = configured_areas or []
+        if self.update_interval is None:
+            if update_interval is not None:
+                self.update_interval = update_interval
+            else:
+                self.update_interval = timedelta(days=1)
         self._client_session: aiohttp.ClientSession = client_session
         if client_session is None:
             self._client_session = aiohttp.ClientSession(
@@ -101,46 +99,27 @@ class Source:
                 )
         return locations
 
+    async def update_area(self, area: dict) -> bool:
+        """Update a given area."""
+        raise NotImplementedError("Not implemented.")
+
     async def update(self, areas=None, force=False) -> list[FuelLocation]:
         """Update hooks for the data source."""
         _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
-        self._configured_areas=[] if areas is None else areas
+        areas = areas or self._configured_areas
         self._clear_cache()
-        if self.next_update <= datetime.now() or force:
-            response = await self._client_session.request(
-                method=self._method,
-                url=self._url,
-                json=self._request_body,
-                headers=self._headers
-            )
-            _LOGGER.debug("Update request completed for %s with status %s",
-                        self.provider_name, response.status)
-            if response.status == 200:
-                self.next_update = datetime.now() + self.update_interval
-                if "application/json" not in response.content_type:
-                    return await self.parse_response(
-                        response=json.loads(await response.text())
-                    )
-                if response.content_type == "text/csv":
-                    return await self.parse_response(
-                        response=list(csv.DictReader(await response.text()))
-                    )
-                return await self.parse_response(
-                    response=await response.json()
-                )
-            if response.status == 403:
-                raise ServiceBlocked(
-                    status=response.status,
-                    response=await response.text(),
-                    headers=response.headers,
-                    service=self.provider_name
-                )
-            raise UpdateFailedError(
-                status=response.status,
-                response=await response.text(),
-                headers=response.headers,
-                service=self.provider_name
-            )
+        if self.next_update > datetime.now() and not force:
+            _LOGGER.debug("Ignoring update request")
+            return
+        coros = [
+            self.update_area(a) for a in areas
+        ]
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.error("Update area failed: %s", result)
+        self.next_update = datetime.now() + self.update_interval
+        return list(self.location_cache.values())
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Parses the response from the update hook."""

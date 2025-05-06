@@ -12,8 +12,9 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID
 )
-from pyfuelprices.sources import Source, geocode_reverse_lookup, geopyexc
+from pyfuelprices.sources import Source
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
+from pyfuelprices.helpers import geocoder, geopyexc
 
 from .const import CONST_PODPOINT_BASE, CONST_PODPOINT_LOCATION, CONST_PODPOINT_SEARCH
 
@@ -52,20 +53,20 @@ class PodPointSource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update_area(self, area: dict):
+    async def update_area(self, area: dict) -> bool:
         """Update a single area."""
         try:
-            geocode = await geocode_reverse_lookup(
+            geocode = await geocoder.geocode_reverse_lookup(
                 (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
             )
         except geopyexc.GeocoderTimedOut:
             _LOGGER.warning("Timeout occured while geocoding area %s.",
                             area)
-            return None
+            return False
         if geocode.raw["address"]["country_code"] != "gb":
             _LOGGER.debug("Skipping area %s as not in GB.",
                         area)
-            return None
+            return False
         _LOGGER.debug("Searching Pod Point for FuelLocations at area %s", area)
         response_raw = await self._send_request(
             url=CONST_PODPOINT_SEARCH.format(
@@ -75,6 +76,7 @@ class PodPointSource(Source):
             )
         )
         await self.parse_response(response_raw)
+        return True
 
     async def get_and_parse_pod(self, response: dict):
         """Retrieves pod details and parses the response."""
@@ -148,16 +150,3 @@ class PodPointSource(Source):
         """Parse fuel station response."""
         coros = [self.get_and_parse_pod(x) for x in response["addresses"]]
         await asyncio.gather(*coros)
-
-    async def update(self, areas=None, force=False):
-        """Update data source."""
-        if self.next_update <= datetime.now() or force:
-            self._configured_areas=[] if areas is None else areas
-            try:
-                self.next_update += self.update_interval
-                coros = [self.update_area(a) for a in self._configured_areas]
-                await asyncio.gather(*coros)
-            except Exception as exc:
-                _LOGGER.exception(exc, exc_info=exc)
-
-        return list(self.location_cache.values())

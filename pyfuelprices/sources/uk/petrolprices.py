@@ -101,7 +101,7 @@ class PetrolPricesUKSource(Source):
                 self._refresh_token = response["refreshToken"]
                 self._at_expires = datetime.now() + timedelta(hours=23)
 
-    async def update_area(self, area: dict, fuel_type: str, fuel_code: str):
+    async def update_area(self, area: dict, fuel_type: str, fuel_code: str) -> bool:
         """Update a given area."""
         response = await self._send_request(
             CONST_PETROLPRICES_FUELSTATIONS.format(
@@ -114,24 +114,27 @@ class PetrolPricesUKSource(Source):
             method="GET"
         )
         if response is None:
-            return
+            return False
         response["fuel_code"] = fuel_code
         await self.parse_response(response)
+        return True
 
     async def update(self, areas=None, force=False):
         """Update PetrolPrices data."""
-        self._configured_areas = areas or []
+        areas = areas or self._configured_areas
         self._clear_cache()
         if self.next_update > datetime.now() and not force:
+            _LOGGER.debug("Ignoring update request")
             return
         coros = [
-            self.update_area(a, ft, code) for a in self._configured_areas
+            self.update_area(a, ft, code) for a in areas
             for ft, code in CONST_PETROLPRICES_FUEL_MAP.items()
         ]
         results = await asyncio.gather(*coros)
         for result in results:
             if isinstance(result, Exception):
                 _LOGGER.exception("Error updating area: %s", result)
+        self.next_update = datetime.now() + self.update_interval
         return list(self.location_cache.values())
 
     async def parse_or_update_station(self, station: dict, fuel_type: str):

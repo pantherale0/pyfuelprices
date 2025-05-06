@@ -9,12 +9,12 @@ import aiohttp
 
 from pyfuelprices.sources import (
     Source,
-    geocode_reverse_lookup,
     UpdateFailedError
 )
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP, FULL_COUNTRY_MAP
 from .const import PROP_FUEL_LOCATION_SOURCE
 from .enum import SupportsConfigType
+from .helpers import geocoder
 from .fuel_locations import FuelLocation
 from .schemas import BASE_CONFIG_SCHEMA
 
@@ -69,7 +69,11 @@ class FuelPrices:
                 coordinates=coordinates,
                 radius=radius
             )
-        geocoded = (await geocode_reverse_lookup(coordinates)).raw['address']['country_code']
+        try:
+            geocoded = (await geocoder.geocode_reverse_lookup(coordinates)).raw['address']['country_code']
+        except Exception as e:
+            _LOGGER.error(f"Geocoding failed: {e}")
+            return [] # Or handle the error as appropriate
         if geocoded.upper() not in FULL_COUNTRY_MAP:
             raise ValueError("No data source exists for the given coordinates.", geocoded)
         locations = []

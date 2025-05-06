@@ -3,6 +3,8 @@
 import random
 import re
 import logging
+import json
+import csv
 import uuid
 import hashlib
 from datetime import datetime, timedelta
@@ -177,9 +179,46 @@ class DirectLeaseTankServiceParser(Source):
         await self.location_cache[site_id].dynamic_build_fuels()
         return self.location_cache[site_id]
 
+    async def _update(self):
+        """Internal update method."""
+        response = await self._client_session.request(
+            method=self._method,
+            url=self._url,
+            json=self._request_body,
+            headers=self._headers
+        )
+        _LOGGER.debug("Update request completed for %s with status %s",
+                    self.provider_name, response.status)
+        if response.status == 200:
+            self.next_update = datetime.now() + self.update_interval
+            if "application/json" not in response.content_type:
+                return await self.parse_response(
+                    response=json.loads(await response.text())
+                )
+            if response.content_type == "text/csv":
+                return await self.parse_response(
+                    response=list(csv.DictReader(await response.text()))
+                )
+            return await self.parse_response(
+                response=await response.json()
+            )
+        if response.status == 403:
+            raise ServiceBlocked(
+                status=response.status,
+                response=await response.text(),
+                headers=response.headers,
+                service=self.provider_name
+            )
+        raise UpdateFailedError(
+            status=response.status,
+            response=await response.text(),
+            headers=response.headers,
+            service=self.provider_name
+        )
+
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         try:
-            await super().update(areas)
+            await self._update()
         except UpdateFailedError as err:
             if err.status == 403:
                 # 403 for directlease is an IP block
@@ -187,7 +226,12 @@ class DirectLeaseTankServiceParser(Source):
                                 "1) Contact tankservice-block@app-it-up.com for further support. "
                                 "2) Change your WAN IP address or use a VPN. "
                                 "3) Use a proxy server to connect. "))
-                raise ServiceBlocked(err.status, err.response, err.headers, self.provider_name) from err
+                raise ServiceBlocked(
+                    err.status,
+                    err.response,
+                    err.headers,
+                    self.provider_name
+                ) from err
 
         self.next_update = datetime.now() + timedelta(
             days=1,

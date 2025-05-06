@@ -2,7 +2,7 @@
 
 import logging
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
@@ -12,9 +12,10 @@ from pyfuelprices.const import (
     PROP_AREA_LONG,
     PROP_AREA_RADIUS
 )
-from pyfuelprices.sources import Source, geocode_reverse_lookup, geopyexc
+from pyfuelprices.sources import Source
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
+from pyfuelprices.helpers import geocoder, geopyexc
 
 from .const import AR_GOB_ENERGY_ID, AR_GOB_DATASOURCE, AR_GOB_TIMEOUT
 
@@ -56,51 +57,47 @@ class GobEnergySource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=False) -> list[FuelLocation]:
-        """Update hooks for the data source."""
-        _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
-        self._configured_areas=[] if areas is None else areas
-        self._clear_cache()
-        if self.next_update <= datetime.now() or force:
-            for area in self._configured_areas:
-                try:
-                    geocode = await geocode_reverse_lookup(
-                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    )
-                except geopyexc.GeocoderTimedOut:
-                    _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                    area)
-                    continue
-                if geocode.raw["address"]["country_code"] != "ar":
-                    _LOGGER.debug("Skipping area %s as not in AR.",
-                                area)
-                    continue
-                response = json.loads(await self._send_request(
-                    url=self._url,
-                    body={
-                        "resource_id": "80ac25de-a44a-4445-9215-090cf55cfda5",
-                        "q": "",
-                        "filters": {
-                            "provincia": str(geocode.raw["address"]["state"]).upper(),
-                            "localidad": str(geocode.raw["address"]["town"]).upper()
-                        },
-                        "limit": 500,
-                        "offset": 0
-                    }
-                ))
-                if response["success"]:
-                    await self.parse_response(response["result"]["records"])
-                else:
-                    _LOGGER.error("Error sending request to %s: %s",
-                                self.provider_name,
-                                response)
-            self.next_update = datetime.now() + self.update_interval
-        return list(self.location_cache.values())
+    async def update_area(self, area: dict) -> bool:
+        """Update a given area."""
+        try:
+            geocode = await geocoder.geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return False
+        if geocode.raw["address"]["country_code"] != "ar":
+            _LOGGER.debug("Skipping area %s as not in AR.",
+                        area)
+            return False
+        response = json.loads(await self._send_request(
+            url=self._url,
+            body={
+                "resource_id": "80ac25de-a44a-4445-9215-090cf55cfda5",
+                "q": "",
+                "filters": {
+                    "provincia": str(geocode.raw["address"]["state"]).upper(),
+                    "localidad": str(geocode.raw["address"]["town"]).upper()
+                },
+                "limit": 500,
+                "offset": 0
+            }
+        ))
+        if response["success"]:
+            await self.parse_response(response["result"]["records"])
+            return True
+        else:
+            _LOGGER.error("Error sending request to %s: %s",
+                        self.provider_name,
+                        response)
+            return False
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
         for location_raw in response:
             site_id = f"{self.provider_name}_{location_raw['idempresa']}"
+            _LOGGER.debug("Parsing location %s", site_id)
             location = FuelLocation.create(
                     site_id=site_id,
                     name=f"{location_raw['empresabandera']} {location_raw['empresa']}",

@@ -17,22 +17,16 @@ from pyfuelprices.const import (
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
 from pyfuelprices.sources import Source
-from pyfuelprices.helpers import geocode_reverse_lookup
+from pyfuelprices.helpers import geocoder
+
+from .const import (
+    CONST_API_GET_REGIONS,
+    CONST_API_SEARCH_ADDRESS,
+    CONST_API_SEARCH_REGIONS,
+    CONST_FUELS
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONST_API_BASE = "https://www.spritpreisrechner.at/api"
-CONST_API_SEARCH_REGIONS = (
-    f"{CONST_API_BASE}/search/gas-stations/by-region?"
-    "code={REG_CODE}&fuelType={FUEL_TYPE}&includeClosed=true&type={REG_TYPE}"
-)
-CONST_API_SEARCH_ADDRESS = (
-    f"{CONST_API_BASE}/search/gas-stations/by-address?"
-    "latitude={LAT}&longitude={LONG}&fuelType={FUEL_TYPE}&includeClosed=true"
-)
-CONST_API_GET_REGIONS = f"{CONST_API_BASE}/regions"
-CONST_FUELS = ["DIE", "SUP", "GAS"]
-
 
 class SpripreisrechnerATSource(Source):
     """Data source for spritpreisrechner."""
@@ -98,17 +92,17 @@ class SpripreisrechnerATSource(Source):
             self.location_cache[site_id].last_updated = datetime.now()
             self.location_cache[site_id].next_update = self.next_update + self.update_interval
 
-    async def update_area(self, area: dict):
+    async def update_area(self, area: dict) -> bool:
         """Update given areas."""
         _LOGGER.debug("Searching FuelGR for FuelLocations at area %s", area)
         parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-        geocoded = await geocode_reverse_lookup(parser_coords)
+        geocoded = await geocoder.geocode_reverse_lookup(parser_coords)
         if geocoded is None:
             _LOGGER.debug("Geocode failed, skipping area %s", area)
-            return
+            return False
         if geocoded.raw["address"]["country_code"] not in ["at"]:
             _LOGGER.debug("Geocode not within AT, skipping area %s", area)
-            return
+            return False
         for fuel in CONST_FUELS:
             await self.parse_response(
                 json.loads(
@@ -119,6 +113,7 @@ class SpripreisrechnerATSource(Source):
                     )
                 )
             )
+        return True
 
     async def update_region(self, region_code, region_type):
         """Update fuels for a given region."""
@@ -171,3 +166,4 @@ class SpripreisrechnerATSource(Source):
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Method not used."""
+        raise NotImplementedError

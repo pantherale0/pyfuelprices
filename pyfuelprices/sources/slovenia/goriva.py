@@ -2,7 +2,6 @@
 
 import logging
 import json
-from datetime import datetime
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
@@ -12,9 +11,10 @@ from pyfuelprices.const import (
     PROP_AREA_LONG,
     PROP_AREA_RADIUS
 )
-from pyfuelprices.sources import Source, geocode_reverse_lookup, geopyexc
+from pyfuelprices.sources import Source
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
+from pyfuelprices.helpers import geocoder, geopyexc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,39 +58,34 @@ class GorivaSource(Source):
         data = await super().search_sites(coordinates, radius)
         return data
 
-    async def update(self, areas=None, force=False) -> list[FuelLocation]:
-        """Update hooks for the data source."""
-        _LOGGER.debug("Starting update hook for %s to url %s", self.provider_name, self._url)
-        self._configured_areas=[] if areas is None else areas
-        self._clear_cache()
-        if self.next_update <= datetime.now() or force:
-            for area in self._configured_areas:
-                try:
-                    geocode = await geocode_reverse_lookup(
-                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    )
-                except geopyexc.GeocoderTimedOut:
-                    _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                    area)
-                    continue
-                if geocode.raw["address"]["country_code"] != "si":
-                    _LOGGER.debug("Skipping area %s as not in SI.",
-                                area)
-                    continue
-                response = json.loads(await self._send_request(
-                    url=self._url,
-                    radius=area[PROP_AREA_RADIUS],
-                    lat=area[PROP_AREA_LAT],
-                    long=area[PROP_AREA_LONG]
-                ))
-                await self.parse_response(response["results"])
-            self.next_update = datetime.now() + self.update_interval
-        return list(self.location_cache.values())
+    async def update_area(self, area) -> bool:
+        """Update a given area."""
+        try:
+            geocode = await geocoder.geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return False
+        if geocode.raw["address"]["country_code"] != "si":
+            _LOGGER.debug("Skipping area %s as not in SI.",
+                        area)
+            return False
+        response = json.loads(await self._send_request(
+            url=self._url,
+            radius=area[PROP_AREA_RADIUS],
+            lat=area[PROP_AREA_LAT],
+            long=area[PROP_AREA_LONG]
+        ))
+        await self.parse_response(response["results"])
+        return True
 
     async def parse_response(self, response) -> list[FuelLocation]:
-        """Converts CMA data into fuel price mapping."""
+        """Converts data into fuel price mapping."""
         for location_raw in response:
             site_id = f"{self.provider_name}_{location_raw['pk']}"
+            _LOGGER.debug("Parsing location %s", site_id)
             location = FuelLocation.create(
                     site_id=site_id,
                     name=location_raw['name'],
