@@ -69,7 +69,11 @@ class FuelPrices:
                 coordinates=coordinates,
                 radius=radius
             )
-        geocoded = (await geocoder.geocode_reverse_lookup(coordinates)).raw['address']['country_code']
+        try:
+            geocoded = (await geocoder.geocode_reverse_lookup(coordinates)).raw['address']['country_code']
+        except Exception as e:
+            _LOGGER.error(f"Geocoding failed: {e}")
+            return [] # Or handle the error as appropriate
         if geocoded.upper() not in FULL_COUNTRY_MAP:
             raise ValueError("No data source exists for the given coordinates.", geocoded)
         locations = []
