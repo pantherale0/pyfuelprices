@@ -1,6 +1,5 @@
 """FuelSnoop data source for Australia (QLD)."""
 
-from datetime import datetime
 import logging
 import json
 
@@ -13,7 +12,7 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.helpers import get_bounding_box
+from pyfuelprices.helpers import geocoder
 from pyfuelprices.sources import Source
 
 from .const import PETROLSPY_API_HEADERS, PETROLSPY_API_SITES
@@ -57,11 +56,11 @@ class PetrolSpySource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update_area(self, area):
+    async def update_area(self, area) -> bool:
         """Update a given area."""
         _LOGGER.debug("Searching PetrolSpy for FuelLocations at area %s",
                         area)
-        bbox = get_bounding_box(
+        bbox = geocoder.get_bounding_box(
             area[PROP_AREA_LAT],
             area[PROP_AREA_LONG],
             area[PROP_AREA_RADIUS]
@@ -76,6 +75,8 @@ class PetrolSpySource(Source):
         )
         if response_raw is not None:
             await self.parse_response(json.loads(response_raw))
+            return True
+        return False
 
     async def parse_response(self, response) -> list[FuelLocation]:
         for station in response["message"]["list"]:

@@ -14,10 +14,9 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE_ID,
 )
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
+from pyfuelprices.helpers import geocoder, geopyexc
 from pyfuelprices.sources import (
     Source,
-    geocode_reverse_lookup,
-    geopyexc,
     UpdateFailedError
 )
 from .const import (
@@ -80,20 +79,20 @@ class GasPassSource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update_area(self, area):
+    async def update_area(self, area) -> bool:
         """Update a given area."""
         try:
-            geocode = await geocode_reverse_lookup(
+            geocode = await geocoder.geocode_reverse_lookup(
                 (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
             )
         except geopyexc.GeocoderTimedOut:
             _LOGGER.warning("Timeout occured while geocoding area %s.",
                             area)
-            return
+            return False
         if geocode.raw["address"]["country_code"] != "br":
             _LOGGER.debug("Skipping area %s as not in BR.",
                         area)
-            return
+            return False
         response_raw = json.loads(await self._send_request(
             lat=area[PROP_AREA_LAT],
             long=area[PROP_AREA_LONG],
@@ -101,10 +100,11 @@ class GasPassSource(Source):
         ))
         if response_raw["message"] == "ok":
             await self.parse_response(response_raw)
-        else:
-            _LOGGER.error("Error sending request to %s: %s",
-                        self.provider_name,
-                        response_raw)
+            return True
+        _LOGGER.error("Error sending request to %s: %s",
+                    self.provider_name,
+                    response_raw)
+        return False
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""

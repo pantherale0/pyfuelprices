@@ -15,7 +15,7 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID
 )
-from pyfuelprices.helpers import geocode_reverse_lookup, get_bounding_box
+from pyfuelprices.helpers import geocoder
 from pyfuelprices.sources import Source
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,20 +86,20 @@ class GasBuddyUSASource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update_area(self, area):
+    async def update_area(self, area) -> bool:
         """Update a given area."""
         coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
         radius = area[PROP_AREA_RADIUS]
-        geocoded = await geocode_reverse_lookup(self._parser_coords)
+        geocoded = await geocoder.geocode_reverse_lookup(self._parser_coords)
         if geocoded is None:
             _LOGGER.debug("Geocode failed, skipping area %s", area)
-            return
+            return False
         if geocoded.raw["address"]["country_code"] not in ["us", "ca"]:
             _LOGGER.debug("Geocode not within USA, skipping area %s", area)
-            return
+            return False
         _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
                             area)
-        bbox = get_bounding_box(area[PROP_AREA_LAT],
+        bbox = geocoder.get_bounding_box(area[PROP_AREA_LAT],
                                 area[PROP_AREA_LONG],
                                 area[PROP_AREA_RADIUS])
         response_raw = await self._send_request(
@@ -117,6 +117,7 @@ class GasBuddyUSASource(Source):
             )
         )
         await self._parse_response(json.loads(response_raw), coords, radius)
+        return True
 
     async def parse_raw_fuel_station(self, station) -> FuelLocation:
         """Converts a raw instance of a fuel station into a fuel location."""
@@ -175,3 +176,4 @@ class GasBuddyUSASource(Source):
 
     async def parse_response(self, response):
         """Method not used."""
+        raise NotImplementedError

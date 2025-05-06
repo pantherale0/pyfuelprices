@@ -115,11 +115,14 @@ class FuelWatchSource(Source):
             self.next_update += self.update_interval
             return list(self.location_cache.values())
 
-    async def update_area(self, area):
+    async def update_area(self, area) -> bool:
         """Method not used."""
+        raise NotImplementedError
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Method not used."""
+        raise NotImplementedError
 
     def parse_fuels(self, fuels) -> list[Fuel]:
         """Method not used."""
+        raise NotImplementedError

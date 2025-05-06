@@ -2,20 +2,12 @@
 
 import asyncio
 import logging
-import json
-import csv
-
 from datetime import timedelta, datetime
 from typing import final
 from geopy import (
-    distance,
-    Nominatim,
-    location,
-    adapters,
-    exc as geopyexc
+    distance   
 )
 import aiohttp
-import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -24,7 +16,6 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.helpers import geocode_reverse_lookup
 from pyfuelprices.enum import SupportsConfigType
 from pyfuelprices.schemas import SOURCE_BASE_CONFIG
 
@@ -108,7 +99,7 @@ class Source:
                 )
         return locations
 
-    async def update_area(self, area: dict):
+    async def update_area(self, area: dict) -> bool:
         """Update a given area."""
         raise NotImplementedError("Not implemented.")
 

@@ -23,6 +23,7 @@ class CMAParser(Source):
 
     async def update_area(self, area):
         """Method not used."""
+        raise NotImplementedError
 
     async def update(self, areas=None, force=False):
         """Update data."""

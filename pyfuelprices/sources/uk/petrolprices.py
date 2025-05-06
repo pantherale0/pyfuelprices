@@ -101,7 +101,7 @@ class PetrolPricesUKSource(Source):
                 self._refresh_token = response["refreshToken"]
                 self._at_expires = datetime.now() + timedelta(hours=23)
 
-    async def update_area(self, area: dict, fuel_type: str, fuel_code: str):
+    async def update_area(self, area: dict, fuel_type: str, fuel_code: str) -> bool:
         """Update a given area."""
         response = await self._send_request(
             CONST_PETROLPRICES_FUELSTATIONS.format(
@@ -114,9 +114,10 @@ class PetrolPricesUKSource(Source):
             method="GET"
         )
         if response is None:
-            return
+            return False
         response["fuel_code"] = fuel_code
         await self.parse_response(response)
+        return True
 
     async def update(self, areas=None, force=False):
         """Update PetrolPrices data."""

@@ -11,9 +11,10 @@ from pyfuelprices.const import (
     PROP_AREA_LONG,
     PROP_AREA_RADIUS
 )
-from pyfuelprices.sources import Source, geocode_reverse_lookup, geopyexc
+from pyfuelprices.sources import Source
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
+from pyfuelprices.helpers import geocoder, geopyexc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,20 +58,20 @@ class GorivaSource(Source):
         data = await super().search_sites(coordinates, radius)
         return data
 
-    async def update_area(self, area):
+    async def update_area(self, area) -> bool:
         """Update a given area."""
         try:
-            geocode = await geocode_reverse_lookup(
+            geocode = await geocoder.geocode_reverse_lookup(
                 (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
             )
         except geopyexc.GeocoderTimedOut:
             _LOGGER.warning("Timeout occured while geocoding area %s.",
                             area)
-            return
+            return False
         if geocode.raw["address"]["country_code"] != "si":
             _LOGGER.debug("Skipping area %s as not in SI.",
                         area)
-            return
+            return False
         response = json.loads(await self._send_request(
             url=self._url,
             radius=area[PROP_AREA_RADIUS],
@@ -78,6 +79,7 @@ class GorivaSource(Source):
             long=area[PROP_AREA_LONG]
         ))
         await self.parse_response(response["results"])
+        return True
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts data into fuel price mapping."""
