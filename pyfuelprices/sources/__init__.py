@@ -111,10 +111,10 @@ class Source:
         if self.next_update > datetime.now() and not force:
             _LOGGER.debug("Ignoring update request")
             return
-        coros = [
-            self.update_area(area) for area in areas
-        ]
-        await asyncio.gather(*coros)
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception):
+                _LOGGER.error(f"Update area failed: {result}")
         self.next_update = datetime.now() + self.update_interval
         return list(self.location_cache.values())
         # response = await self._client_session.request(
