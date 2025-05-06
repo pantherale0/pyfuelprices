@@ -117,7 +117,7 @@ class PetrolSpySource(Source):
             f = fuels[k]
             output.append(Fuel(
                 fuel_type=k,
-                cost=f["amount"],
+                cost=f["amount"]/100,
                 props=f
             ))
         return output
