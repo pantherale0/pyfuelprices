@@ -1,9 +1,9 @@
 """Fuel Price helpers."""
 
 import asyncio
+import time
 import math
-
-from datetime import datetime
+import logging
 
 from geopy import (
     Nominatim,
@@ -14,6 +14,8 @@ from geopy import (
 
 from ._version import __version__ as VERSION
 
+_LOGGER = logging.getLogger(__name__)
+
 class BoundingBox(object):
     """Represent a bounding box."""
     lat_min = None
@@ -21,17 +23,43 @@ class BoundingBox(object):
     lat_max = None
     lon_max = None
 
+class LeakyBucket:
+    """Represent a leaky bucket algorithm rate limiter."""
+    def __init__(self, max_requests, rate):
+        """Create a Leaky Bucket."""
+        self.capacity = max_requests
+        self.rate = rate
+        self.tokens = 0
+        self.last_time = time.time()
+
+    def _update_tokens(self):
+        """Update tokens."""
+        now = time.time()
+        elapsed_time = now - self.last_time
+        self.tokens = min(self.capacity, self.tokens + elapsed_time * self.rate)
+        self.last_time = now
+
+    def allow_request(self) -> bool:
+        """Allow a given request."""
+        self._update_tokens()
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
+        return False
+
 class GeoCodeHandler:
     """Represent a geocode handler."""
-    _geocode_last_lookup: datetime | None = None
     _lookup_lock: asyncio.Lock = asyncio.Lock()
+    _rate_limiter: LeakyBucket = LeakyBucket(
+        max_requests=1,
+        rate=1
+    )
 
     async def geocode_reverse_lookup(self, coordinates: tuple) -> location.Location:
         """Reverse GeoCode lookup."""
         async with self._lookup_lock:
-            if self._geocode_last_lookup is None:
-                self._geocode_last_lookup = datetime.now()
-            if datetime.now().timestamp() - self._geocode_last_lookup.timestamp() < 1:
+            while not self._rate_limiter.allow_request():
+                _LOGGER.debug("Geocoder rate limit reached (1req/s), sleeping for 1s")
                 await asyncio.sleep(1)
             async with Nominatim(
                 user_agent=f"pyfuelprices-{VERSION}",

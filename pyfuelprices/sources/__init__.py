@@ -111,46 +111,15 @@ class Source:
         if self.next_update > datetime.now() and not force:
             _LOGGER.debug("Ignoring update request")
             return
+        coros = [
+            self.update_area(a) for a in areas
+        ]
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in results:
             if isinstance(result, Exception):
-                _LOGGER.error(f"Update area failed: {result}")
+                _LOGGER.error("Update area failed: %s", result)
         self.next_update = datetime.now() + self.update_interval
         return list(self.location_cache.values())
-        # response = await self._client_session.request(
-        #     method=self._method,
-        #     url=self._url,
-        #     json=self._request_body,
-        #     headers=self._headers
-        # )
-        # _LOGGER.debug("Update request completed for %s with status %s",
-        #             self.provider_name, response.status)
-        # if response.status == 200:
-        #     self.next_update = datetime.now() + self.update_interval
-        #     if "application/json" not in response.content_type:
-        #         return await self.parse_response(
-        #             response=json.loads(await response.text())
-        #         )
-        #     if response.content_type == "text/csv":
-        #         return await self.parse_response(
-        #             response=list(csv.DictReader(await response.text()))
-        #         )
-        #     return await self.parse_response(
-        #         response=await response.json()
-        #     )
-        # if response.status == 403:
-        #     raise ServiceBlocked(
-        #         status=response.status,
-        #         response=await response.text(),
-        #         headers=response.headers,
-        #         service=self.provider_name
-        #     )
-        # raise UpdateFailedError(
-        #     status=response.status,
-        #     response=await response.text(),
-        #     headers=response.headers,
-        #     service=self.provider_name
-        # )
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Parses the response from the update hook."""
