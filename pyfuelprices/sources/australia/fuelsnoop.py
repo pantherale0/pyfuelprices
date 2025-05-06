@@ -57,32 +57,27 @@ class FuelSnoopSource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler to look all products."""
-        self._configured_areas=[] if areas is None else areas
-        if datetime.now() > self.next_update or force:
-            for area in self._configured_areas:
-                _LOGGER.debug("Searching FuelSnoop for FuelLocations at area %s",
-                              area)
-                bbox = get_bounding_box(
-                    area[PROP_AREA_LAT],
-                    area[PROP_AREA_LONG],
-                    area[PROP_AREA_RADIUS]
-                )
-                response_raw = await self._send_request(
-                    url=FUELSNOOP_API_SITES,
-                    body={
-                        "min_lng": bbox.lon_min,
-                        "min_lat": bbox.lat_min,
-                        "max_lng": bbox.lon_max,
-                        "max_lat": bbox.lat_max,
-                        "brand_names": []
-                    }
-                )
-                if response_raw is not None:
-                    await self.parse_response(json.loads(response_raw))
-            self.next_update += self.update_interval
-            return list(self.location_cache.values())
+    async def update_area(self, area):
+        """Update a given area."""
+        _LOGGER.debug("Searching FuelSnoop for FuelLocations at area %s",
+                        area)
+        bbox = get_bounding_box(
+            area[PROP_AREA_LAT],
+            area[PROP_AREA_LONG],
+            area[PROP_AREA_RADIUS]
+        )
+        response_raw = await self._send_request(
+            url=FUELSNOOP_API_SITES,
+            body={
+                "min_lng": bbox.lon_min,
+                "min_lat": bbox.lat_min,
+                "max_lng": bbox.lon_max,
+                "max_lat": bbox.lat_max,
+                "brand_names": []
+            }
+        )
+        if response_raw is not None:
+            await self.parse_response(json.loads(response_raw))
 
     async def parse_response(self, response) -> list[FuelLocation]:
         for station in response:

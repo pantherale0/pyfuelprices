@@ -86,40 +86,37 @@ class GasBuddyUSASource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler as this needs to query GasBuddy on areas."""
-        self._configured_areas=[] if areas is None else areas
-        for area in self._configured_areas:
-            self._parser_coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-            self._parser_radius = area[PROP_AREA_RADIUS]
-            geocoded = await geocode_reverse_lookup(self._parser_coords)
-            if geocoded is None:
-                _LOGGER.debug("Geocode failed, skipping area %s", area)
-                continue
-            if geocoded.raw["address"]["country_code"] not in ["us", "ca"]:
-                _LOGGER.debug("Geocode not within USA, skipping area %s", area)
-                continue
-            _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
+    async def update_area(self, area):
+        """Update a given area."""
+        coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+        radius = area[PROP_AREA_RADIUS]
+        geocoded = await geocode_reverse_lookup(self._parser_coords)
+        if geocoded is None:
+            _LOGGER.debug("Geocode failed, skipping area %s", area)
+            return
+        if geocoded.raw["address"]["country_code"] not in ["us", "ca"]:
+            _LOGGER.debug("Geocode not within USA, skipping area %s", area)
+            return
+        _LOGGER.debug("Searching GasBuddy for FuelLocations at area %s",
                             area)
-            bbox = get_bounding_box(area[PROP_AREA_LAT],
-                                    area[PROP_AREA_LONG],
-                                    area[PROP_AREA_RADIUS])
-            response_raw = await self._send_request(
-                url=CONST_GASBUDDY_STATIONS_FMT.format(
-                    AUTHID=str(uuid.uuid4()),
-                    COUNTRY="US",
-                    DISTANCEFMT="auto",
-                    LIMIT=1000,
-                    LAT=area[PROP_AREA_LAT],
-                    LONG=area[PROP_AREA_LONG],
-                    MIN_LAT=bbox.lat_min,
-                    MIN_LON=bbox.lon_min,
-                    MAX_LAT=bbox.lat_max,
-                    MAX_LON=bbox.lon_max
-                )
+        bbox = get_bounding_box(area[PROP_AREA_LAT],
+                                area[PROP_AREA_LONG],
+                                area[PROP_AREA_RADIUS])
+        response_raw = await self._send_request(
+            url=CONST_GASBUDDY_STATIONS_FMT.format(
+                AUTHID=str(uuid.uuid4()),
+                COUNTRY="US",
+                DISTANCEFMT="auto",
+                LIMIT=1000,
+                LAT=area[PROP_AREA_LAT],
+                LONG=area[PROP_AREA_LONG],
+                MIN_LAT=bbox.lat_min,
+                MIN_LON=bbox.lon_min,
+                MAX_LAT=bbox.lat_max,
+                MAX_LON=bbox.lon_max
             )
-            await self.parse_response(json.loads(response_raw))
-        return list(self.location_cache.values())
+        )
+        await self._parse_response(json.loads(response_raw), coords, radius)
 
     async def parse_raw_fuel_station(self, station) -> FuelLocation:
         """Converts a raw instance of a fuel station into a fuel location."""
@@ -150,15 +147,15 @@ class GasBuddyUSASource(Source):
             await self.location_cache[site_id].update(loc)
         return self.location_cache[site_id]
 
-    async def parse_response(self, response) -> list[FuelLocation]:
+    async def _parse_response(self, response, coords, radius) -> list[FuelLocation]:
         if response.get("stations", None) is not None:
             response = response["stations"]
         for station in response:
             info = station["info"]
             if distance.distance(
-                self._parser_coords,
+                coords,
                 (info["latitude"], info["longitude"])
-            ).miles <= self._parser_radius:
+            ).miles <= radius:
                 await self.parse_raw_fuel_station(station=station)
 
         return list(self.location_cache.values())
@@ -175,3 +172,6 @@ class GasBuddyUSASource(Source):
                 props=fuel
             ))
         return fuel_parsed
+
+    async def parse_response(self, response):
+        """Method not used."""

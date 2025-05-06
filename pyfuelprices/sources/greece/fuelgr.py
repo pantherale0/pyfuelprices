@@ -3,10 +3,9 @@
 import logging
 import asyncio
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import xmltodict
-from geopy import distance
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -96,23 +95,9 @@ class FuelGrSource(Source):
         response_raw = response_raw["gss"]["gs"]
         _LOGGER.debug("Found %s fuel stations",
                     len(response_raw))
-        
         await self.parse_response(
             response=response_raw
         )
-
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Update the cached data."""
-        if self.next_update <= datetime.now() or force:
-            self._configured_areas=[] if areas is None else areas
-            try:
-                self.next_update += self.update_interval
-                coros = [self.update_area(a) for a in self._configured_areas]
-                asyncio.gather(*coros)
-            except Exception as exc:
-                _LOGGER.error(exc)
-
-        return list(self.location_cache.values())
 
     async def get_fuel_station_fuels(self, station_id) -> list[Fuel]:
         """Return a list of fuels from a fuel station."""

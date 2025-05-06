@@ -4,7 +4,6 @@ import logging
 import json
 
 from datetime import datetime, timedelta
-from geopy import distance
 
 from pyfuelprices.const import (
     PROP_AREA_LAT,
@@ -14,9 +13,6 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID,
 )
-from pyfuelprices.build_data import (
-    GASPASS_URL
-)
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
 from pyfuelprices.sources import (
     Source,
@@ -24,28 +20,22 @@ from pyfuelprices.sources import (
     geopyexc,
     UpdateFailedError
 )
+from .const import (
+    CONST_FUELS,
+    CONST_GET_FUELS
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONST_GET_FUELS = f"{GASPASS_URL}/api/v1/gaspass/"
-CONST_FUELS = [
-    "ultimo_preco_alcool",
-    "ultimo_preco_diesel",
-    "ultimo_preco_diesel_s10",
-    "ultimo_preco_gasolina",
-    "ultimo_preco_gasolina_adt",
-    "ultimo_preco_gnv"
-]
 
 class GasPassSource(Source):
     """GasPass Source."""
     provider_name = "gaspass"
     location_cache: dict[str, FuelLocation] = {}
 
-    def __init__(self, update_interval = ..., client_session = None):
+    def __init__(self, configured_areas = None, update_interval = ..., client_session = None, configuration = None):
         if update_interval.seconds < 3600:
             update_interval = timedelta(hours=1)
-        super().__init__(update_interval, client_session)
+        super().__init__(configured_areas, update_interval, client_session, configuration)
 
     async def _send_request(self, lat, long, radius):
         """Send a request to the API for a given postcode and radius."""
@@ -90,36 +80,31 @@ class GasPassSource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler as this needs to query GasPass on areas."""
-        if datetime.now() > self.next_update or force:
-            self._configured_areas=[] if areas is None else areas
-            for area in self._configured_areas:
-                try:
-                    geocode = await geocode_reverse_lookup(
-                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    )
-                except geopyexc.GeocoderTimedOut:
-                    _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                    area)
-                    continue
-                if geocode.raw["address"]["country_code"] != "br":
-                    _LOGGER.debug("Skipping area %s as not in BR.",
-                                area)
-                    continue
-                response_raw = json.loads(await self._send_request(
-                    lat=area[PROP_AREA_LAT],
-                    long=area[PROP_AREA_LONG],
-                    radius=area[PROP_AREA_RADIUS]
-                ))
-                if response_raw["message"] == "ok":
-                    await self.parse_response(response_raw)
-                else:
-                    _LOGGER.error("Error sending request to %s: %s",
-                                self.provider_name,
-                                response_raw)
-            self.next_update += self.update_interval
-        return list(self.location_cache.values())
+    async def update_area(self, area):
+        """Update a given area."""
+        try:
+            geocode = await geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return
+        if geocode.raw["address"]["country_code"] != "br":
+            _LOGGER.debug("Skipping area %s as not in BR.",
+                        area)
+            return
+        response_raw = json.loads(await self._send_request(
+            lat=area[PROP_AREA_LAT],
+            long=area[PROP_AREA_LONG],
+            radius=area[PROP_AREA_RADIUS]
+        ))
+        if response_raw["message"] == "ok":
+            await self.parse_response(response_raw)
+        else:
+            _LOGGER.error("Error sending request to %s: %s",
+                        self.provider_name,
+                        response_raw)
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""

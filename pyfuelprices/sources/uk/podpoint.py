@@ -148,16 +148,3 @@ class PodPointSource(Source):
         """Parse fuel station response."""
         coros = [self.get_and_parse_pod(x) for x in response["addresses"]]
         await asyncio.gather(*coros)
-
-    async def update(self, areas=None, force=False):
-        """Update data source."""
-        if self.next_update <= datetime.now() or force:
-            self._configured_areas=[] if areas is None else areas
-            try:
-                self.next_update += self.update_interval
-                coros = [self.update_area(a) for a in self._configured_areas]
-                await asyncio.gather(*coros)
-            except Exception as exc:
-                _LOGGER.exception(exc, exc_info=exc)
-
-        return list(self.location_cache.values())

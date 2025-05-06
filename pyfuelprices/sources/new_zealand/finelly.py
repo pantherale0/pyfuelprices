@@ -67,18 +67,6 @@ class FinellyDataSource(Source):
             return
         await self.parse_response(await response.json())
 
-    async def update(self, areas=None, force=False):
-        """Update Finelly areas."""
-        self._configured_areas = areas or []
-        self._clear_cache()
-        if self.next_update > datetime.now() and not force:
-            return
-        coros = [
-            self.update_area(a) for a in self._configured_areas
-        ]
-        await asyncio.gather(*coros)
-        return list(self.location_cache.values())
-
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
         # first query the API to populate cache / update data in case this data is unavailable.

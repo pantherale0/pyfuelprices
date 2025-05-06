@@ -120,18 +120,20 @@ class PetrolPricesUKSource(Source):
 
     async def update(self, areas=None, force=False):
         """Update PetrolPrices data."""
-        self._configured_areas = areas or []
+        areas = areas or self._configured_areas
         self._clear_cache()
         if self.next_update > datetime.now() and not force:
+            _LOGGER.debug("Ignoring update request")
             return
         coros = [
-            self.update_area(a, ft, code) for a in self._configured_areas
+            self.update_area(a, ft, code) for a in areas
             for ft, code in CONST_PETROLPRICES_FUEL_MAP.items()
         ]
         results = await asyncio.gather(*coros)
         for result in results:
             if isinstance(result, Exception):
                 _LOGGER.exception("Error updating area: %s", result)
+        self.next_update = datetime.now() + self.update_interval
         return list(self.location_cache.values())
 
     async def parse_or_update_station(self, station: dict, fuel_type: str):

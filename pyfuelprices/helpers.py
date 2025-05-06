@@ -1,6 +1,9 @@
 """Fuel Price helpers."""
 
+import asyncio
 import math
+
+from datetime import datetime
 
 from geopy import (
     Nominatim,
@@ -10,12 +13,22 @@ from geopy import (
 
 from ._version import __version__ as VERSION
 
+_geocode_last_lookup = None
+_lookup_lock = asyncio.Lock()
+
 async def geocode_reverse_lookup(coordinates: tuple) -> location.Location:
     """Reverse GeoCode lookup."""
-    async with Nominatim(
-        user_agent=f"pyfuelprices-{VERSION}",
-        adapter_factory=adapters.AioHTTPAdapter) as geolocator:
-        return await geolocator.reverse(coordinates, exactly_one=True, timeout=15, addressdetails=True)
+    global _geocode_last_lookup
+    global _lookup_lock
+    async with _lookup_lock:
+        if _geocode_last_lookup is None:
+            _geocode_last_lookup = datetime.now()
+        if datetime.now().timestamp() - _geocode_last_lookup.timestamp() < 1:
+            await asyncio.sleep(1)
+        async with Nominatim(
+            user_agent=f"pyfuelprices-{VERSION}",
+            adapter_factory=adapters.AioHTTPAdapter) as geolocator:
+            return await geolocator.reverse(coordinates, exactly_one=True, timeout=15, addressdetails=True)
 
 class BoundingBox(object):
     """Represent a bounding box."""

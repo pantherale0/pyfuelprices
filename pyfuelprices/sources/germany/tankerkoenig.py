@@ -20,14 +20,11 @@ from pyfuelprices.sources import (
     geocode_reverse_lookup,
     geopyexc
 )
-
+from .const import (
+    CONST_TANKERKOENIG_GET_STATIONS
+)
 _LOGGER = logging.getLogger(__name__)
 
-CONST_TANKERKOENIG_API_BASE = "https://tankerkoenig.de/ajax_v3_public/"
-CONST_TANKERKOENIG_GET_STATIONS = (
-    f"{CONST_TANKERKOENIG_API_BASE}get_stations_near_postcode.php"
-    "?postcode={POSTCODE}&radius={RADIUS}"
-)
 
 class TankerKoenigSource(Source):
     """TankerKoenig Source."""
@@ -73,35 +70,30 @@ class TankerKoenigSource(Source):
         )
         return await super().search_sites(coordinates, radius)
 
-    async def update(self, areas=None, force=None) -> list[FuelLocation]:
-        """Custom update handler as this needs to query TankerKoenig on areas."""
-        if datetime.now() > self.next_update or force:
-            self._configured_areas=[] if areas is None else areas
-            for area in self._configured_areas:
-                try:
-                    geocode = await geocode_reverse_lookup(
-                        (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
-                    )
-                except geopyexc.GeocoderTimedOut:
-                    _LOGGER.warning("Timeout occured while geocoding area %s.",
-                                    area)
-                    continue
-                if geocode.raw["address"]["country_code"] != "de":
-                    _LOGGER.debug("Skipping area %s as not in DE.",
-                                area)
-                    continue
-                response_raw = json.loads(await self._send_request(
-                    postcode=geocode.raw["address"]["postcode"],
-                    radius=area[PROP_AREA_RADIUS]
-                ))
-                if response_raw["ok"]:
-                    await self.parse_response(response_raw["data"])
-                else:
-                    _LOGGER.error("Error sending request to %s: %s",
-                                self.provider_name,
-                                response_raw)
-            self.next_update += self.update_interval
-        return list(self.location_cache.values())
+    async def update_area(self, area):
+        """Update a given area."""
+        try:
+            geocode = await geocode_reverse_lookup(
+                (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
+            )
+        except geopyexc.GeocoderTimedOut:
+            _LOGGER.warning("Timeout occured while geocoding area %s.",
+                            area)
+            return
+        if geocode.raw["address"]["country_code"] != "de":
+            _LOGGER.debug("Skipping area %s as not in DE.",
+                        area)
+            return
+        response_raw = json.loads(await self._send_request(
+            postcode=geocode.raw["address"]["postcode"],
+            radius=area[PROP_AREA_RADIUS]
+        ))
+        if response_raw["ok"]:
+            await self.parse_response(response_raw["data"])
+        else:
+            _LOGGER.error("Error sending request to %s: %s",
+                        self.provider_name,
+                        response_raw)
 
     def _parse_raw(self, station: dict) -> FuelLocation:
         """Parse a single raw instance of a fuel site."""

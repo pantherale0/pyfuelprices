@@ -3,7 +3,7 @@
 import logging
 import uuid
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
@@ -52,6 +52,9 @@ class PecoOnlineSource(Source):
 
     async def update(self, areas=None, force=None) -> list[FuelLocation]:
         """Update the cached data."""
+        if self.next_update > datetime.now() and not force:
+            _LOGGER.debug("Ignoring update request")
+            return
         try:
             response_raw = await self._send_request(
                 url=self._url,
@@ -65,9 +68,9 @@ class PecoOnlineSource(Source):
             await self.parse_response(
                 response=json.loads(response_raw)
             )
+            self.next_update = datetime.now() + self.update_interval
         except Exception as exc:
             _LOGGER.error(exc)
-
         return list(self.location_cache.values())
 
     async def parse_raw_fuel_station(self, station: dict) -> FuelLocation:

@@ -7,7 +7,7 @@ from pyfuelprices.const import (
     DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
-from pyfuelprices.sources import Source
+from pyfuelprices.sources.uk import CMAParser
 
 COSTCO_FUEL_MAPPING = {
     "Premium Unleaded Petrol": "E5",
@@ -15,7 +15,7 @@ COSTCO_FUEL_MAPPING = {
     "Unleaded Petrol": "E10"
 }
 
-class CostcoUKSource(Source):
+class CostcoUKSource(CMAParser):
     """A Costco data source."""
     _url = "https://www.costco.co.uk/store-finder/search?q=United%20Kingdom&page=0"
     _headers = {

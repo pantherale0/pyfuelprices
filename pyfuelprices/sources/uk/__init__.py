@@ -1,18 +1,68 @@
 """UK Fuel Sources and parsers."""
 
+import logging
+import json
+import csv
+from datetime import datetime
+
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID
 )
-from pyfuelprices.sources import Source
+from pyfuelprices.sources import Source, UpdateFailedError, ServiceBlocked
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
+
+_LOGGER = logging.getLogger(__name__)
 
 class CMAParser(Source):
     """This parser is specific for the scheme by the CMA."""
 
     location_cache: dict[str, FuelLocation] = {}
+
+    async def update_area(self, area):
+        """Method not used."""
+
+    async def update(self, areas=None, force=False):
+        """Update data."""
+        if self.next_update > datetime.now() and not force:
+            _LOGGER.debug("Ignoring update request")
+            return
+        response = await self._client_session.request(
+            method=self._method,
+            url=self._url,
+            json=self._request_body,
+            headers=self._headers
+        )
+        _LOGGER.debug("Update request completed for %s with status %s",
+                    self.provider_name, response.status)
+        if response.status == 200:
+            self.next_update = datetime.now() + self.update_interval
+            if "application/json" not in response.content_type:
+                return await self.parse_response(
+                    response=json.loads(await response.text())
+                )
+            if response.content_type == "text/csv":
+                return await self.parse_response(
+                    response=list(csv.DictReader(await response.text()))
+                )
+            return await self.parse_response(
+                response=await response.json()
+            )
+        if response.status == 403:
+            raise ServiceBlocked(
+                status=response.status,
+                response=await response.text(),
+                headers=response.headers,
+                service=self.provider_name
+            )
+        raise UpdateFailedError(
+            status=response.status,
+            response=await response.text(),
+            headers=response.headers,
+            service=self.provider_name
+        )
 
     async def parse_response(self, response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
