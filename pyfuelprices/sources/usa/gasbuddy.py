@@ -39,8 +39,6 @@ class GasBuddyUSASource(Source):
         "apikey": "56c57e8f1132465d817d6a753c59387e",
         "User-Agent": CONST_USER_AGENT
     }
-    _parser_radius = 0
-    _parser_coords = ()
     provider_name = "gasbuddy"
     location_cache = {}
 
@@ -90,7 +88,7 @@ class GasBuddyUSASource(Source):
         """Update a given area."""
         coords = (area[PROP_AREA_LAT], area[PROP_AREA_LONG])
         radius = area[PROP_AREA_RADIUS]
-        geocoded = await geocoder.geocode_reverse_lookup(self._parser_coords)
+        geocoded = await geocoder.geocode_reverse_lookup(coords)
         if geocoded is None:
             _LOGGER.debug("Geocode failed, skipping area %s", area)
             return False
