@@ -1,9 +1,7 @@
 """Official Finelly Fuel Data Source."""
 
 # This is an official data source for Home Assistant users from Finelly
-import asyncio
 import logging
-from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -37,7 +35,6 @@ class FinellyDataSource(Source):
 
     provider_name="finelly"
     location_cache: dict[str, FuelLocation] = {}
-    update_interval = timedelta(hours=12)
     attr_config_type = SupportsConfigType.REQUIRES_ONLY
     attr_config = CONFIG
 
