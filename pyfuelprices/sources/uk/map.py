@@ -19,7 +19,7 @@ from .sgn import SgnRetailUKSource
 from .shell import ShellUKSource
 from .tesco import TescoUKSource
 
-SOURCE_MAP: dict[str, tuple[Source, int, int]] = {
+SOURCE_MAP: dict[str, tuple[Source, int, int, int]] = {
     "applegreen": (ApplegreenUKSource, 1, 1, 0),
     "asda": (AsdaUKSource, 1, 1, 0),
     "ascona": (AsconaGroupUKSource, 1, 1, 0),
