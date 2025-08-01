@@ -19,22 +19,22 @@ from .sgn import SgnRetailUKSource
 from .shell import ShellUKSource
 from .tesco import TescoUKSource
 
-SOURCE_MAP: dict[str, tuple[Source, int, int]] = {
-    "applegreen": (ApplegreenUKSource, 1, 1,),
-    "asda": (AsdaUKSource, 1, 1,),
-    "ascona": (AsconaGroupUKSource, 1, 1,),
-    "bpuk": (BpUKSource, 1, 1,),
-    "costco": (CostcoUKSource, 1, 1,),
-    "essouk": (EssoUKSource, 1, 1,),
-    "jet": (JetUKSource, 1, 0,),
-    "karanretail": (KaranRetailSource, 1, 1,),
-    "motoway": (MotowayUKSource, 1, 1,),
-    "motorfuelgroup": (MotorFuelGroupUKSource, 1, 1,),
+SOURCE_MAP: dict[str, tuple[Source, int, int, int]] = {
+    "applegreen": (ApplegreenUKSource, 1, 1, 0),
+    "asda": (AsdaUKSource, 1, 1, 0),
+    "ascona": (AsconaGroupUKSource, 1, 1, 0),
+    "bpuk": (BpUKSource, 1, 1, 0),
+    "costco": (CostcoUKSource, 1, 1, 0),
+    "essouk": (EssoUKSource, 1, 1, 0),
+    "jet": (JetUKSource, 1, 0, 0),
+    "karanretail": (KaranRetailSource, 1, 1, 0),
+    "motoway": (MotowayUKSource, 1, 1, 0),
+    "motorfuelgroup": (MotorFuelGroupUKSource, 1, 1, 0),
     "petrolprices": (PetrolPricesUKSource, 1, 1, 1),
-    "podpoint": (PodPointSource, 1, 1, 0,),
-    "rontec": (RontecUKSource, 1, 1,),
-    "sainsburys": (SainsburysUKSource, 1, 1,),
-    "sgnretail": (SgnRetailUKSource, 1, 1,),
-    "shelluk": (ShellUKSource, 1, 1,),
-    "tesco": (TescoUKSource, 1, 1,)
+    "podpoint": (PodPointSource, 1, 1, 0),
+    "rontec": (RontecUKSource, 1, 1, 0),
+    "sainsburys": (SainsburysUKSource, 1, 1, 0),
+    "sgnretail": (SgnRetailUKSource, 1, 1, 0),
+    "shelluk": (ShellUKSource, 1, 1, 0),
+    "tesco": (TescoUKSource, 1, 1, 0)
 }
