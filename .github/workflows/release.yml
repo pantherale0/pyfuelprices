@@ -21,7 +21,7 @@ jobs:
           sed -i "s/^FINELLY_URL=.*$/FINELLY_URL=\"${{ secrets.FINELLY_URL }}\"/" "$filepath"
           sed -i "s/^GASPASS_URL=.*$/GASPASS_URL=\"${{ secrets.GASPASS_URL }}\"/" "$filepath"
       - uses: extractions/setup-just@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Build package
