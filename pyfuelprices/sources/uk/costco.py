@@ -17,9 +17,10 @@ COSTCO_FUEL_MAPPING = {
 
 class CostcoUKSource(CMAParser):
     """A Costco data source."""
-    _url = """https://www.costco.co.uk/rest/v2/uk/
-    stores?fields=FULL&query=London&radius=3000000&longitude=-0.12770000100135803
-    &latitude=51.50354766845703&returnAllStores=true&pageSize=999&lang=en_GB&curr=GBP"""
+    _url = ("https://www.costco.co.uk/rest/v2/uk/stores?fields=FULL&query=London"
+            "&radius=3000000&longitude=-0.12770000100135803"
+            "&latitude=51.50354766845703&returnAllStores=true&pageSize=999"
+            "&lang=en_GB&curr=GBP")
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT,
         "Accept": "application/json",
@@ -47,11 +48,11 @@ class CostcoUKSource(CMAParser):
         for station in response:
             if len(station.get("gasTypes", [])) == 0:
                 continue
-            site_id = f"{self.provider_name}_{station['addressId']}"
+            site_id = f"{self.provider_name}_{station['address']['id']}"
             location = FuelLocation.create(
                 site_id=site_id,
-                name=f"Costco {station["displayName"]}",
-                address=f"{station["address"]["line1"]}\n{station["address"]["line2"]}\n{station["address"]["town"]}\n{station["address"]["postalCode"]}",
+                name=f"Costco {station['displayName']}",
+                address=f"{station['address']['line1']}\n{station['address']['line2']}\n{station['address']['town']}\n{station['address']['postalCode']}",
                 brand=self.provider_name,
                 available_fuels=self.parse_fuels(
                     station["gasTypes"]
