@@ -15,7 +15,7 @@ class ShellUKSource(CMAParser):
 
     _url = ("https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json"
             "?sp=r&st=2025-11-07T06:00:49Z&se=2026-11-07T14:07:49Z&spr=https&"
-            "sv=2024-11-04&sr=b&sig=V1o+ZNwZT9KEvmvLuCv25ittu9Hh90JwtfE+tc1PAtA=")
+            "sv=2024-11-04&sr=b&sig=V1o%2BZNwZT9KEvmvLuCv25ittu9Hh90JwtfE%2Btc1PAtA%3D")
     provider_name = "shelluk"
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT
