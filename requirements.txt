@@ -1,4 +1,4 @@
-aiohttp>=2.8.0
+aiohttp>=3.12.14
 geopy==2.4.1
 xmltodict
 voluptuous
