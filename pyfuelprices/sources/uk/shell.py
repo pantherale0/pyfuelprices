@@ -13,9 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 class ShellUKSource(CMAParser):
     """Shell UK uses the CMA parser although requires custom request handlers."""
 
-    _url = ("https://prodpricinghubstrgacct.blob.core.windows.net/ukcma/fuel-prices-data.json"
-            "?sp=r&st=2025-11-07T06:00:49Z&se=2026-11-07T14:07:49Z&spr=https&"
-            "sv=2024-11-04&sr=b&sig=V1o+ZNwZT9KEvmvLuCv25ittu9Hh90JwtfE+tc1PAtA=")
+    _url = "https://www.shell.co.uk/fuel-prices-data.html"
     provider_name = "shelluk"
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT
@@ -31,7 +29,8 @@ class ShellUKSource(CMAParser):
                 url=self._url,
                 method=self._method,
                 json=self._request_body,
-                headers=self._headers
+                headers=self._headers,
+                allow_redirects=True
             ) as response:
                 _LOGGER.debug("Update request completed for %s with status %s",
                               self.provider_name, response.status)
