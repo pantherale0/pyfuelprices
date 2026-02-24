@@ -4,41 +4,33 @@
 import logging
 
 from geopy import (
-    distance ,
-    point  
+    distance,
+    point
 )
-import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_DYNAMIC_BUILD,
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_SOURCE_ID,
-    PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_AREA_LAT,
     PROP_AREA_LONG,
     PROP_AREA_RADIUS
 )
-from pyfuelprices.build_data import (
-    FINELLY_URL
-)
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.enum import SupportsConfigType
 from pyfuelprices.sources import Source
 
-from .const import ANWB_API_BASE, ANWB_API_FUEL_STATION
+from .const import ANWB_API_BASE
 
 _LOGGER = logging.getLogger(__name__)
-CONFIG = vol.Schema(
-    {
-    }
-)
 
 class ANWBOnderwegDataSource(Source):
     """Core ANWB onderweg source."""
 
+    country_code = ["CH", "DE", "DK", "ES", "FI", "GB", "FR", "IT", "NO", "NL", "PT", "RU", "SE", "TR", "UA", "LU"]
+
     provider_name="ANWBOnderweg"
     location_cache: dict[str, FuelLocation] = {}
-    attr_config = CONFIG
+    auto_country_mapping = False
 
     def _build_request_url(self,lat: float, long: float, radius: float):
         """Build a valid request URL."""
@@ -49,7 +41,6 @@ class ANWBOnderwegDataSource(Source):
         south = distance.distance(kilometers=radius).destination(center, 180)
         east = distance.distance(kilometers=radius).destination(center, 90)
         west = distance.distance(kilometers=radius).destination(center, 270)
-        
         min_lat = south.latitude
         max_lat = north.latitude
         min_lon = west.longitude
@@ -100,7 +91,7 @@ class ANWBOnderwegDataSource(Source):
                 await self.parse_fuel_station(station)
                 i += 1
                 if i % 100 == 1:
-                    _LOGGER.debug(f"{i} stations loaded")
+                    _LOGGER.debug("%s stations loaded", i)
         return list(self.location_cache.values())
 
     async def parse_fuel_station(self, data: dict):
@@ -132,16 +123,16 @@ class ANWBOnderwegDataSource(Source):
         return self.location_cache[site_id]
 
 
-    """ 
-        EURO95 = E10
-        EURO98 = E5
-        DIESEL = B7
-        AUTOGAS = LPG
-        Premium diesel = ?
-    """
+
+    #    EURO95 = E10
+    #    EURO98 = E5
+    #    DIESEL = B7
+    #    AUTOGAS = LPG
+    #    Premium diesel = ?
+
     def parse_fuels(self, fuels) -> list[Fuel]:
-        retVal = []
+        parsed = []
         if fuels:
             for fuel in fuels:
-                retVal.append(Fuel(fuel_type=fuel.get("fuelType"), cost=fuel.get("value")))
-        return retVal
+                parsed.append(Fuel(fuel_type=fuel.get("fuelType"), cost=fuel.get("value")))
+        return parsed

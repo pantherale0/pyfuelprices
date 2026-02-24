@@ -33,6 +33,8 @@ CONFIG = vol.Schema(
 class FinellyDataSource(Source):
     """Core Finelly source."""
 
+    country_code = "NZ"
+
     provider_name="finelly"
     location_cache: dict[str, FuelLocation] = {}
     attr_config_type = SupportsConfigType.REQUIRES_ONLY

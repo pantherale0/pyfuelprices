@@ -28,6 +28,9 @@ CONST_COMPARIS_DATA_ID = "__NEXT_DATA__"
 
 class ComparisSource(Source):
     """Comparis Source."""
+
+    country_code = "CH"
+
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT,
         "Content-Length":"0"

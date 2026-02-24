@@ -21,13 +21,13 @@ REQUIREMENTS = [
 ]
 
 DEV_REQUIREMENTS = [
-    'bandit >= 1.7,< 1.9',
+    'bandit >= 1.7,< 1.10',
     'black >= 23,< 26',
     'build >= 0.10,< 1.4',
     'flake8 >= 6,< 8',
-    'isort >= 5,< 7',
+    'isort >= 5,< 8',
     'mypy >= 1.5,< 1.19',
-    'pytest >= 7,< 9',
+    'pytest >= 7,< 10',
     'pytest-cov >= 4,< 8',
     'twine >= 4,< 7',
 ]

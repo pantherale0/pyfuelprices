@@ -1,9 +1,12 @@
 """Esso UK module."""
 
-from pyfuelprices.sources.uk import CMAParser, FuelLocation
+from pyfuelprices.sources import Source
+from pyfuelprices.sources.uk import CMAParserMixIn, FuelLocation
 
-class EssoUKSource(CMAParser):
+class EssoUKSource(CMAParserMixIn, Source):
     """Esso UK uses the same parser as CMA."""
+
+    country_code = "GB"
 
     _url = "https://fuelprices.esso.co.uk/latestdata.json"
     provider_name = "essouk"

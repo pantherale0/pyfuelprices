@@ -1,11 +1,13 @@
 """Tesco UK dataprovider."""
 
 from pyfuelprices.const import DESKTOP_USER_AGENT
-from pyfuelprices.fuel import Fuel
-from pyfuelprices.sources.uk import CMAParser, FuelLocation
+from pyfuelprices.sources import Source
+from pyfuelprices.sources.uk import CMAParserMixIn, FuelLocation
 
-class TescoUKSource(CMAParser):
+class TescoUKSource(CMAParserMixIn, Source):
     """Tesco UK uses the CMA parser."""
+
+    country_code = "GB"
 
     _url = "https://www.tesco.com/fuel_prices/fuel_prices_data.json"
     provider_name = "tesco"
