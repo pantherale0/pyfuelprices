@@ -119,7 +119,7 @@ class ANWBOnderwegDataSource(Source):
             postal_code=f"{data.get("address").get("postalCode")}" ,
             currency="EUR",
             props={
-                PROP_FUEL_LOCATION_DYNAMIC_BUILD: True,
+                PROP_FUEL_LOCATION_DYNAMIC_BUILD: False,
                 PROP_FUEL_LOCATION_SOURCE: self.provider_name,
                 PROP_FUEL_LOCATION_SOURCE_ID: data["id"]
             },
@@ -131,6 +131,14 @@ class ANWBOnderwegDataSource(Source):
             await self.location_cache[site_id].update(loc)
         return self.location_cache[site_id]
 
+
+    """ 
+        EURO95 = E10
+        EURO98 = E5
+        DIESEL = B7
+        AUTOGAS = LPG
+        Premium diesel = ?
+    """
     def parse_fuels(self, fuels) -> list[Fuel]:
         retVal = []
         if fuels:
