@@ -98,7 +98,7 @@ class ANWBOnderwegDataSource(Source):
         if response['value']:
             for station in response['value']:
                 await self.parse_fuel_station(station)
-                i+1
+                i += 1
                 if i % 100 == 1:
                     _LOGGER.debug(f"{i} stations loaded")
         return list(self.location_cache.values())
