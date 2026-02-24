@@ -7,7 +7,6 @@ from geopy import (
     distance,
     point
 )
-import voluptuous as vol
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_DYNAMIC_BUILD,
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class ANWBOnderwegDataSource(Source):
     """Core ANWB onderweg source."""
 
-    country_code = "NL"
+    country_code = ["CH", "DE", "DK", "ES", "FI", "GB", "FR", "IT", "NO", "NL", "PT", "RU", "SE", "TR", "UA", "LU"]
 
     provider_name="ANWBOnderweg"
     location_cache: dict[str, FuelLocation] = {}
