@@ -31,11 +31,12 @@ def load_sources():
             if not obj.__module__.startswith(full_module_name):
                 continue
             if inspect.isclass(obj) and issubclass(obj, Source) and obj is not Source:
-                country_code_mapping.setdefault(obj.country_code, [])
-                enabled_sources.setdefault(obj.country_code, [])
-                country_code_mapping[obj.country_code].append(obj.provider_name)
-                if obj.enabled:
-                    enabled_sources[obj.country_code].append(obj.provider_name)
+                for country in obj.country_code if isinstance(obj.country_code, list) else [obj.country_code]:
+                    country_code_mapping.setdefault(country, [])
+                    enabled_sources.setdefault(country, [])
+                    country_code_mapping[country].append(obj.provider_name)
+                    if obj.enabled:
+                        enabled_sources[country].append(obj.provider_name)
                 sources[obj.provider_name] = (
                     obj,
                     int(obj.enabled),

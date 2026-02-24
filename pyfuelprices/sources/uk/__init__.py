@@ -4,6 +4,7 @@ import logging
 import json
 import csv
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 import aiohttp
 
@@ -16,34 +17,28 @@ from pyfuelprices.sources import UpdateFailedError, ServiceBlocked
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
 
+if TYPE_CHECKING:
+    from pyfuelprices.sources import Source
+
 _LOGGER = logging.getLogger(__name__)
 
-class CMAParser():
+class CMAParserMixIn(object):
     """This parser is specific for the scheme by the CMA."""
 
     _url: str = ""
     _method: str = "GET"
     _request_body: dict | None = None
     _headers: dict = {}
-    _raw_data = None
-    _timeout: int = 30
-    _configured_areas: list[dict] = []
     _client_session: aiohttp.ClientSession = None
     update_interval: timedelta = None
     next_update: datetime = datetime.now()
-    provider_name: str = ""
-    location_cache: dict[str, FuelLocation] = None
-    configuration: dict | None = None
-    country_code: str = "GB"
-    enabled: bool = True
-    available_for_setup: bool = True
     auto_country_mapping: bool = False
 
-    async def update_area(self, area):
+    async def update_area(self: "Source", area):
         """Method not used."""
         raise NotImplementedError
 
-    async def update(self, areas=None, force=False):
+    async def update(self: "Source", areas=None, force=False):
         """Update data."""
         if self.next_update > datetime.now() and not force:
             _LOGGER.debug("Ignoring update request")
@@ -83,7 +78,7 @@ class CMAParser():
             service=self.provider_name
         )
 
-    async def parse_response(self, response) -> list[FuelLocation]:
+    async def parse_response(self: "Source", response) -> list[FuelLocation]:
         """Converts CMA data into fuel price mapping."""
         for location_raw in response["stations"]:
             site_id = f"{self.provider_name}_{location_raw['site_id']}"
@@ -110,7 +105,7 @@ class CMAParser():
                 await self.location_cache[site_id].update(location)
         return list(self.location_cache.values())
 
-    def parse_fuels(self, fuels) -> list[Fuel]:
+    def parse_fuels(self: "Source", fuels) -> list[Fuel]:
         """Parses fuel data."""
         f_list = []
         for f_type in fuels:

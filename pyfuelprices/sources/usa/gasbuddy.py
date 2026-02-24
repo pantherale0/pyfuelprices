@@ -35,7 +35,7 @@ CONST_USER_AGENT = "GasBuddy/701.14.24016 (24016; android 34) Google/Pixel_4_XL"
 class GasBuddyUSASource(Source):
     """GasBuddy USA data source."""
 
-    country_code = "US"
+    country_code = ["CA", "US"]
 
     _headers = {
         "apikey": "56c57e8f1132465d817d6a753c59387e",
