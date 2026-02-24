@@ -1,1 +1,1 @@
-"""Argentina data sources."""
+"""Slovenia data sources."""
