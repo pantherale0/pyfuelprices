@@ -166,7 +166,7 @@ class DirectLeaseTankServiceParser(Source):
     """DirectLease parser for Belgium/Netherlands data."""
 
     country_code = ["NL", "BE"]
-    enabled = False
+    available_for_setup  = False
     auto_country_mapping = False
 
     _url = DIRECTLEASE_API_PLACES
