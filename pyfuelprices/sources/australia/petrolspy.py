@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class PetrolSpySource(Source):
     """PetrolSpy data source."""
+
+    country_code = ["AU", "NZ"]
+
     provider_name = "petrolspy"
     _fuel_products: list[str] = []
     location_cache: dict[str, FuelLocation] = {}

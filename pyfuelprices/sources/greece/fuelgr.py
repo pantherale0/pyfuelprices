@@ -29,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 class FuelGrSource(Source):
     """The root FuelGR data source."""
 
+    country_code = "GR"
+
     update_interval = timedelta(days=1) # update once per day to prevent API spam.
     provider_name = "fuelgr"
     location_cache: dict[str, FuelLocation] = {}

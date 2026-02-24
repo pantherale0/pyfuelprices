@@ -22,6 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class PodPointSource(Source):
     """Pod Point data source."""
+
+    country_code = "GB"
+    auto_country_mapping = False
     provider_name="podpoint"
     _headers = {
         "User-Agent": "POD Point Native Mobile App/3.27.12 (Android/14)"

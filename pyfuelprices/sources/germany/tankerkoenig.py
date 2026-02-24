@@ -27,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class TankerKoenigSource(Source):
     """TankerKoenig Source."""
+
+    country_code = "DE"
+
     _headers = {
         "User-Agent": DESKTOP_USER_AGENT
     }

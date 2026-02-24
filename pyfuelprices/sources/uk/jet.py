@@ -1,9 +1,12 @@
 """JET UK module."""
 
-from pyfuelprices.sources.uk import CMAParser, FuelLocation
+from pyfuelprices.sources import Source
+from pyfuelprices.sources.uk import CMAParserMixIn, FuelLocation
 
-class JetUKSource(CMAParser):
+class JetUKSource(CMAParserMixIn, Source):
     """JET uses the CMA parser."""
+
+    country_code = "GB"
 
     _url = "https://jetlocal.co.uk/fuel_prices_data.json"
     provider_name = "jet"

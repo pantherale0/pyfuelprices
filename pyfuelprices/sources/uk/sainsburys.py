@@ -1,10 +1,13 @@
 """Sainsburys UK dataprovider."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.const import DESKTOP_USER_AGENT
-from pyfuelprices.sources.uk import CMAParser, FuelLocation
+from pyfuelprices.sources.uk import CMAParserMixIn, FuelLocation
 
-class SainsburysUKSource(CMAParser):
+class SainsburysUKSource(CMAParserMixIn, Source):
     """Sainsburys UK uses the CMA parser."""
+
+    country_code = "GB"
 
     _url = "https://api.sainsburys.co.uk/v1/exports/latest/fuel_prices_data.json"
     provider_name = "sainsburys"

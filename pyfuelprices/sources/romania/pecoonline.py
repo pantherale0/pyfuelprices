@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 class PecoOnlineSource(Source):
     """The root Peco Online data source."""
 
+    country_code = "RO"
+
     _url = PECO_ONLINE_API
     update_interval = timedelta(days=1) # update once per day to prevent API spam.
     provider_name = "pecoonline"

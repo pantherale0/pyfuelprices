@@ -165,15 +165,23 @@ class DirectLeaseFuelLocation(FuelLocation):
 class DirectLeaseTankServiceParser(Source):
     """DirectLease parser for Belgium/Netherlands data."""
 
+    country_code = ["NL", "BE"]
+    auto_country_mapping = False
+
     _url = DIRECTLEASE_API_PLACES
     provider_name = "directlease"
     location_cache: dict[str, FuelLocation] = {}
     location_tree = None
 
-    def __init__(self, update_interval = ..., client_session = None):
+    def __init__(self,
+        configured_areas: list[dict] = None,
+        update_interval: timedelta = timedelta(days=1),
+        client_session: aiohttp.ClientSession = None,
+        configuration: dict | None = None
+    ) -> None:
         if update_interval.days < 1:
             update_interval=timedelta(days=1)
-        super().__init__(update_interval, client_session)
+        super().__init__(configured_areas, update_interval, client_session, configuration)
 
     async def get_site(self, site_id) -> FuelLocation:
         await self.location_cache[site_id].dynamic_build_fuels()

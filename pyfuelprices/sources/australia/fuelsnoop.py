@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class FuelSnoopSource(Source):
     """FuelSnoop data source."""
+
+    country_code = "AU"
+
     provider_name = "fuelsnoop"
     _fuel_products: list[str] = []
     location_cache: dict[str, FuelLocation] = {}

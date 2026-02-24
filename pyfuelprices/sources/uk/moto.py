@@ -1,9 +1,12 @@
 """Motor Fuel Group UK dataprovider."""
 
-from pyfuelprices.sources.uk import CMAParser, FuelLocation
+from pyfuelprices.sources import Source
+from pyfuelprices.sources.uk import CMAParserMixIn, FuelLocation
 
-class MotowayUKSource(CMAParser):
+class MotowayUKSource(CMAParserMixIn, Source):
     """Moto-Way UK uses the CMA parser."""
+
+    country_code = "GB"
 
     _url = "https://moto-way.com/fuel-price/fuel_prices.json"
     provider_name = "motoway"
