@@ -111,7 +111,7 @@ class ANWBOnderwegDataSource(Source):
         loc = FuelLocation.create(
             site_id=site_id,
             name=data.get("title", None),
-            address=f"{address.get("streetAddress"), address.get("city")}",
+            address=f"{address.get("streetAddress")}, {address.get("city")}",
             lat=coordinates.get("latitude"),
             long=coordinates.get("longitude"),
             brand=None,
