@@ -1,8 +1,9 @@
 """Motor Fuel Group UK dataprovider."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class MotorFuelGroupUKSource(CMAParser):
+class MotorFuelGroupUKSource(CMAParser, Source):
     """Motor Fuel Group UK uses the CMA parser."""
 
     _url = "https://fuel.motorfuelgroup.com/fuel_prices_data.json"

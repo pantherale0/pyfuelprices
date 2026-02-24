@@ -1,8 +1,9 @@
 """Asda UK module."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class AsdaUKSource(CMAParser):
+class AsdaUKSource(CMAParser, Source):
     """Asda uses the CMA parser."""
 
     _url = "https://storelocator.asda.com/fuel_prices_data.json"

@@ -7,7 +7,7 @@ from pyfuelprices.const import (
     DESKTOP_USER_AGENT
 )
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
-from pyfuelprices.sources.uk import CMAParser
+from pyfuelprices.sources import Source
 
 COSTCO_FUEL_MAPPING = {
     "5302": "E5",
@@ -15,7 +15,7 @@ COSTCO_FUEL_MAPPING = {
     "5301": "E10"
 }
 
-class CostcoUKSource(CMAParser):
+class CostcoUKSource(Source):
     """A Costco data source."""
     _url = ("https://www.costco.co.uk/rest/v2/uk/stores?fields=FULL&query=London"
             "&radius=3000000&longitude=-0.12770000100135803"
@@ -28,6 +28,7 @@ class CostcoUKSource(CMAParser):
         "X-Requested-With": "XMLHttpRequest",
         "Referer": "https://www.costco.co.uk/store-finder?q=London"
     }
+    country_code = "GB"
     location_cache: dict[str, FuelLocation] = {}
     provider_name: str = "costco"
 

@@ -5,12 +5,12 @@ import json
 
 from datetime import datetime
 from pyfuelprices.const import DESKTOP_USER_AGENT
-from pyfuelprices.sources import UpdateFailedError
+from pyfuelprices.sources import UpdateFailedError, Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
 _LOGGER = logging.getLogger(__name__)
 
-class ShellUKSource(CMAParser):
+class ShellUKSource(CMAParser, Source):
     """Shell UK uses the CMA parser although requires custom request handlers."""
 
     _url = "https://www.shell.co.uk/fuel-prices-data.html"

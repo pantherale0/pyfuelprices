@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 class GobEnergySource(Source):
     """GobEnergy fuel source."""
 
+    country_code = "AR"
+
     update_interval = timedelta(hours=12) # hardcoded due to slow servers
     provider_name=AR_GOB_ENERGY_ID
     location_cache: dict[str, FuelLocation] = {}

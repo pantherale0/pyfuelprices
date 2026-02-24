@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 class PetrolPricesUKSource(Source):
     """PetrolPrices source."""
 
+    country_code = "GB"
+
     _headers = {
         "Accept": "application/json",
         "User-Agent": "okhttp/4.9.2"

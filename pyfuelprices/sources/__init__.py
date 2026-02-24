@@ -5,7 +5,7 @@ import logging
 from datetime import timedelta, datetime
 from typing import final
 from geopy import (
-    distance   
+    distance
 )
 import aiohttp
 
@@ -39,6 +39,10 @@ class Source:
     configuration: dict | None = None
     attr_config_type: SupportsConfigType = SupportsConfigType.NONE
     attr_config = SOURCE_BASE_CONFIG
+    country_code: str
+    enabled: bool = True
+    available_for_setup: bool = True
+    auto_country_mapping: bool = True
 
     def __init__(self,
                  configured_areas: list[dict] = None,

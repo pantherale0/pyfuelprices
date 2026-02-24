@@ -1,8 +1,9 @@
 """Karan Retail Ltd dataprovider."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class KaranRetailSource(CMAParser):
+class KaranRetailSource(CMAParser, Source):
     """Karan Retail Ltd uses the CMA parser."""
 
     _url = "https://api.krl.live/integration/live_price/krl"

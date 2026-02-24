@@ -28,6 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class GasPassSource(Source):
     """GasPass Source."""
+
+    country_code = "BR"
+
     provider_name = "gaspass"
     location_cache: dict[str, FuelLocation] = {}
 

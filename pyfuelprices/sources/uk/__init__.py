@@ -3,23 +3,41 @@
 import logging
 import json
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
+
+import aiohttp
 
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID
 )
-from pyfuelprices.sources import Source, UpdateFailedError, ServiceBlocked
+from pyfuelprices.sources import UpdateFailedError, ServiceBlocked
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.fuel_locations import FuelLocation
 
 _LOGGER = logging.getLogger(__name__)
 
-class CMAParser(Source):
+class CMAParser():
     """This parser is specific for the scheme by the CMA."""
 
-    location_cache: dict[str, FuelLocation] = {}
+    _url: str = ""
+    _method: str = "GET"
+    _request_body: dict | None = None
+    _headers: dict = {}
+    _raw_data = None
+    _timeout: int = 30
+    _configured_areas: list[dict] = []
+    _client_session: aiohttp.ClientSession = None
+    update_interval: timedelta = None
+    next_update: datetime = datetime.now()
+    provider_name: str = ""
+    location_cache: dict[str, FuelLocation] = None
+    configuration: dict | None = None
+    country_code: str = "GB"
+    enabled: bool = True
+    available_for_setup: bool = True
+    auto_country_mapping: bool = False
 
     async def update_area(self, area):
         """Method not used."""

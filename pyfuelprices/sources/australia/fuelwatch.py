@@ -20,6 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class FuelWatchSource(Source):
     """FuelWatch data source."""
+
+    country_code = "AU"
+
     provider_name = "fuelwatch"
     _fuel_products: list[str] = []
     _headers = {

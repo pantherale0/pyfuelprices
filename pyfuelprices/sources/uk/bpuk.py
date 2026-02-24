@@ -1,10 +1,11 @@
 """BP UK dataprovider."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.const import DESKTOP_USER_AGENT
 from pyfuelprices.fuel import Fuel
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class BpUKSource(CMAParser):
+class BpUKSource(CMAParser, Source):
     """BP UK uses the CMA parser."""
 
     _url = "https://www.bp.com/en_gb/united-kingdom/home/fuelprices/fuel_prices_data.json"

@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class GorivaSource(Source):
     """Goriva fuel source."""
 
+    country_code = "SI"
+
     provider_name="goriva"
     location_cache: dict[str, FuelLocation] = {}
     _url: str = "https://goriva.si/api/v1/search/?position={LAT},{LONG}&radius={RADIUS}&franchise=&name=&o="

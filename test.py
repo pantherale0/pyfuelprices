@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def main():
     """Main init."""
-    enabled_sources=["finelly"]
+    enabled_sources=SOURCE_MAP.keys()
     configs = {
         "providers": {},
         "areas": [
@@ -194,5 +194,4 @@ if __name__ == "__main__":
         format="%(asctime)s %(name)s %(levelname)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

@@ -1,8 +1,9 @@
 """Ascona Group UK dataprovider."""
 
+from pyfuelprices.sources import Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class AsconaGroupUKSource(CMAParser):
+class AsconaGroupUKSource(CMAParser, Source):
     """Asconagrounp UK uses the CMA parser."""
 
     _url = "https://fuelprices.asconagroup.co.uk/newfuel.json"

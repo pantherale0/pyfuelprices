@@ -1,9 +1,9 @@
 """SGN Retail UK dataprovider."""
 
-from pyfuelprices.fuel import Fuel
+from pyfuelprices.sources import Source
 from pyfuelprices.sources.uk import CMAParser, FuelLocation
 
-class SgnRetailUKSource(CMAParser):
+class SgnRetailUKSource(CMAParser, Source):
     """SGN Retail UK uses the CMA parser."""
 
     _url = "https://www.sgnretail.uk/files/data/SGN_daily_fuel_prices.json"

@@ -31,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 class SpripreisrechnerATSource(Source):
     """Data source for spritpreisrechner."""
 
+    country_code = "AT"
+
     provider_name = "spritpreisrechner"
     _headers = {"User-Agent": DESKTOP_USER_AGENT}
     location_cache: dict[str, FuelLocation] = {}
