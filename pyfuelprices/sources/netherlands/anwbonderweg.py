@@ -28,7 +28,7 @@ class ANWBOnderwegDataSource(Source):
 
     country_code = ["CH", "DE", "DK", "ES", "FI", "GB", "FR", "IT", "NO", "NL", "PT", "RU", "SE", "TR", "UA", "LU"]
 
-    provider_name="ANWBOnderweg"
+    provider_name="anwbonderweg"
     location_cache: dict[str, FuelLocation] = {}
     auto_country_mapping = False
 
@@ -41,7 +41,6 @@ class ANWBOnderwegDataSource(Source):
         south = distance.distance(kilometers=radius).destination(center, 180)
         east = distance.distance(kilometers=radius).destination(center, 90)
         west = distance.distance(kilometers=radius).destination(center, 270)
-
         min_lat = south.latitude
         max_lat = north.latitude
         min_lon = west.longitude
