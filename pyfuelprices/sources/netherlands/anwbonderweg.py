@@ -28,7 +28,7 @@ class ANWBOnderwegDataSource(Source):
 
     country_code = ["CH", "DE", "DK", "ES", "FI", "GB", "FR", "IT", "NO", "NL", "PT", "RU", "SE", "TR", "UA", "LU"]
 
-    provider_name="ANWBOnderweg"
+    provider_name="anwbonderweg"
     location_cache: dict[str, FuelLocation] = {}
     auto_country_mapping = False
 
