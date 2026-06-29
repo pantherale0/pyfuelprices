@@ -22,7 +22,7 @@ REQUIREMENTS = [
 
 DEV_REQUIREMENTS = [
     'bandit >= 1.7,< 1.10',
-    'black >= 23,< 26',
+    'black >= 23,< 27',
     'build >= 0.10,< 1.5',
     'flake8 >= 6,< 8',
     'isort >= 5,< 8',
