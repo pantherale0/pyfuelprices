@@ -45,6 +45,12 @@ class PetrolmateSource(Source):
         data = await super().search_sites(coordinates, radius)
         if len(data) > 0:
             return data
+
+        max_radius_miles = PETROLMATE_MAX_RADIUS_M / MILES_TO_METRES
+        if radius > max_radius_miles:
+            _LOGGER.warning("Radius %s too large for this provider. Limiting to %s", radius, max_radius_miles)
+            radius = max_radius_miles
+
         await self.update(
             areas=[{PROP_AREA_LAT: coordinates[0], PROP_AREA_LONG: coordinates[1], PROP_AREA_RADIUS: radius}],
             force=True,
