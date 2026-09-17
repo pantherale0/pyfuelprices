@@ -56,3 +56,13 @@ PETROLSPY_API_SITES = (
     "&swLat={LAT_MIN}"
     "&swLng={LNG_MIN}"
 )
+
+PETROLMATE_API_BASE = "https://petrolmate.com.au/api/v1/"
+PETROLMATE_API_HEADERS = {
+    "User-Agent": DESKTOP_USER_AGENT,
+    "Accept": "application/json",
+}
+PETROLMATE_API_SITES = (
+    f"{PETROLMATE_API_BASE}stations/area?"
+    "lat={LAT}&lng={LNG}&radius={RADIUS}&limit={LIMIT}"
+)
