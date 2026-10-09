@@ -156,10 +156,15 @@ class FuelGrSource(Source):
     def parse_fuels(self, fuels: dict) -> list[Fuel]:
         """Parse fuels using mapping"""
         fuel_resp = []
+        if isinstance(fuels, dict):
+            fuels = [fuels]
         for f in fuels:
+            fuel_type = FUELGR_FUEL_TYPE_MAPPING.get(f["@type"], f["fn"])
+            if f.get("@isPr") == "1":
+                fuel_type = f"Premium {fuel_type}"
             fuel_resp.append(
                 Fuel(
-                    fuel_type=FUELGR_FUEL_TYPE_MAPPING.get(f["@type"], f["fn"]),
+                    fuel_type=fuel_type,
                     cost=float(f["pr"]),
                     props=f
                 )
