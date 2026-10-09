@@ -1,4 +1,4 @@
-aiohttp>=3.12.14
+aiohttp>=3.14.4
 curl_cffi>=0.7
 geopy==2.4.1
 xmltodict
