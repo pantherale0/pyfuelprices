@@ -59,12 +59,17 @@ class FuelPrices:
                                        radius: float,
                                        source_id: str = "") -> list[dict]:
         """Retrieve all fuel locations from a single point."""
+        source_id = (source_id or "").strip().lower()
+        if source_id == "any":
+            source_id = ""
         _LOGGER.debug("Searching for all fuel locations at point %s with a %s "
                       "mile radius for source %s.",
                       coordinates,
                       radius,
                       source_id if source_id != "" else "any")
         if source_id != "":
+            if source_id not in self.configured_sources:
+                raise ValueError(f"Source {source_id} is not configured.", source_id)
             return await self.configured_sources[source_id].search_sites(
                 coordinates=coordinates,
                 radius=radius
