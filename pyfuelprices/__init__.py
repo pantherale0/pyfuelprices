@@ -9,6 +9,7 @@ import aiohttp
 
 from pyfuelprices.sources import (
     Source,
+    SessionClosedError,
     UpdateFailedError
 )
 from pyfuelprices.sources.mapping import SOURCE_MAP, COUNTRY_MAP, FULL_COUNTRY_MAP
@@ -23,14 +24,56 @@ _LOGGER = logging.getLogger(__name__)
 class FuelPrices:
     """The base fuel prices entry class."""
 
-    configured_sources: dict[str, Source] = {}
-    configured_areas: list[dict] = []
-    _global_config: dict = {}
-    _accessed_sites: dict[str, str] = {}
-    client_session: aiohttp.ClientSession = None
-    _semaphore: asyncio.Semaphore = asyncio.Semaphore(4)
+    configured_sources: dict[str, Source]
+    configured_areas: list[dict]
+    client_session: aiohttp.ClientSession | None
+
+    def __init__(self) -> None:
+        """Initialise per-instance state."""
+        self.configured_sources = {}
+        self.configured_areas = []
+        self.client_session = None
+        self._global_config = {}
+        self._accessed_sites = {}
+        self._owns_session = False
+        self._timeout = 30
+        self._semaphore = asyncio.Semaphore(4)
+
+    def _new_session(self) -> aiohttp.ClientSession:
+        """Create a client session owned by this instance."""
+        return aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(
+                use_dns_cache=True,
+                ttl_dns_cache=360
+            ),
+            timeout=aiohttp.ClientTimeout(total=self._timeout)
+        )
+
+    def _ensure_session(self) -> None:
+        """Make sure a live session is available to all sources."""
+        if self.client_session is not None and not self.client_session.closed:
+            return
+        if not self._owns_session:
+            raise SessionClosedError("pyfuelprices")
+        _LOGGER.debug("Client session closed, creating a new one")
+        self.attach_session(self._new_session(), owned=True)
+
+    def attach_session(self, client_session: aiohttp.ClientSession, owned: bool = False) -> None:
+        """Replace the client session used by this instance and all its sources."""
+        self.client_session = client_session
+        self._owns_session = owned
+        for src in self.configured_sources.values():
+            src.attach_session(client_session)
+
+    async def close(self) -> None:
+        """Close the client session if it was created by this instance."""
+        if self._owns_session and self.client_session is not None:
+            await self.client_session.close()
+            self.client_session = None
+
     async def update(self, force: bool=False):
         """Main data fetch / update handler."""
+        self._ensure_session()
         async def update_src(s: Source, a: list[dict], f: bool):
             """Update source."""
             try:
@@ -50,6 +93,7 @@ class FuelPrices:
 
     async def get_fuel_location(self, site_id: str, source_id: str) -> FuelLocation:
         """Retrieve a single fuel location (supporting dynamic parse)."""
+        self._ensure_session()
         if site_id not in self._accessed_sites:
             self._accessed_sites[site_id] = source_id
         return await self.configured_sources[source_id].get_site(site_id)
@@ -59,6 +103,7 @@ class FuelPrices:
                                        radius: float,
                                        source_id: str = "") -> list[dict]:
         """Retrieve all fuel locations from a single point."""
+        self._ensure_session()
         source_id = (source_id or "").strip().lower()
         if source_id == "any":
             source_id = ""
@@ -158,20 +203,15 @@ class FuelPrices:
         if configuration is None:
             configuration = {}
         BASE_CONFIG_SCHEMA(configuration)
-        self.configured_areas = configuration.get("areas")
+        self.configured_areas = configuration.get("areas") or []
         enabled_sources = list(configuration.get("providers", {}).keys())
+        self._timeout = configuration.get("timeout", 30)
         if client_session is not None:
             self.client_session = client_session
+            self._owns_session = False
         else:
-            self.client_session = aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(
-                    use_dns_cache=True,
-                    ttl_dns_cache=360
-                ),
-                timeout=aiohttp.ClientTimeout(
-                    total=configuration.get("timeout", 30)
-                )
-            )
+            self.client_session = self._new_session()
+            self._owns_session = True
 
         if enabled_sources is None:
             enabled_sources=COUNTRY_MAP.get(configuration.get("country_code", "").upper(), [])
@@ -212,6 +252,11 @@ class UpdateExceptionGroup(Exception):
             if isinstance(exc, UpdateFailedError):
                 errors[exc.service] = exc.status
         return errors
+
+    @property
+    def session_closed(self) -> bool:
+        """True if any provider failed because the client session was closed."""
+        return any(isinstance(x, SessionClosedError) for x in self._excs)
 
     @property
     def exception_list(self) -> list[Exception]:
