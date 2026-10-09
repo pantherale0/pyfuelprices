@@ -31,7 +31,8 @@ class Source:
     _raw_data = None
     _timeout: int = 30
     _configured_areas: list[dict] = []
-    _client_session: aiohttp.ClientSession = None
+    _session: aiohttp.ClientSession | None = None
+    _owns_session: bool = True
     update_interval: timedelta = None
     next_update: datetime = datetime.now()
     provider_name: str = ""
@@ -56,17 +57,37 @@ class Source:
                 self.update_interval = update_interval
             else:
                 self.update_interval = timedelta(days=1)
-        self._client_session: aiohttp.ClientSession = client_session
-        if client_session is None:
-            self._client_session = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=self._timeout)
-            )
-        else:
-            self._client_session = client_session
+        # Must be per instance: a class-level dict is shared by every FuelPrices
+        # instance, so stale sources survive integration reloads.
+        self.location_cache = {}
+        self._session = client_session
+        self._owns_session = client_session is None
         if self.next_update is None:
             self.next_update = datetime.now()
         self._validate_config(configuration)
         self.configuration = configuration
+
+    @property
+    def _client_session(self) -> aiohttp.ClientSession:
+        """Return a usable client session, recreating it if owned and closed."""
+        if self._session is None or self._session.closed:
+            if not self._owns_session:
+                raise SessionClosedError(self.provider_name)
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self._timeout)
+            )
+        return self._session
+
+    def attach_session(self, client_session: aiohttp.ClientSession) -> None:
+        """Use an externally managed client session."""
+        self._session = client_session
+        self._owns_session = False
+
+    async def close(self) -> None:
+        """Close the client session if this source created it."""
+        if self._owns_session and self._session is not None and not self._session.closed:
+            await self._session.close()
+        self._session = None
 
     @final
     def _check_if_coord_in_area(self, coordinates) -> bool:
@@ -120,8 +141,10 @@ class Source:
         ]
         results = await asyncio.gather(*coros, return_exceptions=True)
         for result in results:
+            if isinstance(result, SessionClosedError):
+                raise result
             if isinstance(result, Exception):
-                _LOGGER.error("Update area failed: %s", result)
+                _LOGGER.error("Update area failed for %s: %r", self.provider_name, result)
         self.next_update = datetime.now() + self.update_interval
         return list(self.location_cache.values())
 
@@ -167,3 +190,14 @@ class UpdateFailedError(Exception):
 
 class ServiceBlocked(UpdateFailedError):
     """Service Blocked exception."""
+
+class SessionClosedError(RuntimeError):
+    """The externally provided client session has been closed.
+
+    The owner of the session must create a new FuelPrices instance (or call
+    FuelPrices.attach_session) with a live session.
+    """
+
+    def __init__(self, service: str) -> None:
+        super().__init__(f"Client session for {service} is closed")
+        self.service = service

@@ -6,8 +6,6 @@ import csv
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-import aiohttp
-
 from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
@@ -29,7 +27,6 @@ class CMAParserMixIn(object):
     _method: str = "GET"
     _request_body: dict | None = None
     _headers: dict = {}
-    _client_session: aiohttp.ClientSession = None
     update_interval: timedelta = None
     next_update: datetime = datetime.now()
     auto_country_mapping: bool = False

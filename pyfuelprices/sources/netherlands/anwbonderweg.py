@@ -17,11 +17,14 @@ from pyfuelprices.const import (
     PROP_AREA_RADIUS
 )
 from pyfuelprices.fuel_locations import FuelLocation, Fuel
-from pyfuelprices.sources import Source
+from pyfuelprices.sources import Source, UpdateFailedError
 
 from .const import ANWB_API_BASE
 
 _LOGGER = logging.getLogger(__name__)
+
+# Each split quarters the box, so this caps a single area at 4 ** 3 requests.
+ANWB_MAX_SPLIT_DEPTH = 3
 
 class ANWBOnderwegDataSource(Source):
     """Core ANWB onderweg source."""
@@ -32,38 +35,67 @@ class ANWBOnderwegDataSource(Source):
     location_cache: dict[str, FuelLocation] = {}
     auto_country_mapping = False
 
-    def _build_request_url(self,lat: float, long: float, radius: float):
-        """Build a valid request URL."""
-
+    @staticmethod
+    def _build_bounding_box(lat: float, long: float, radius: float) -> tuple[float, float, float, float]:
+        """Return (min_lat, min_lon, max_lat, max_lon) for a radius in miles."""
         center = point.Point(lat, long)
-
-        north = distance.distance(kilometers=radius).destination(center, 0)
-        south = distance.distance(kilometers=radius).destination(center, 180)
-        east = distance.distance(kilometers=radius).destination(center, 90)
-        west = distance.distance(kilometers=radius).destination(center, 270)
-        min_lat = south.latitude
-        max_lat = north.latitude
-        min_lon = west.longitude
-        max_lon = east.longitude
-
-        return f"{ANWB_API_BASE}&bounding-box-filter={min_lat}%2C{min_lon}%2C{max_lat}%2C{max_lon}"
+        dist = distance.distance(miles=radius)
+        return (
+            dist.destination(center, 180).latitude,
+            dist.destination(center, 270).longitude,
+            dist.destination(center, 0).latitude,
+            dist.destination(center, 90).longitude,
+        )
 
     async def update_area(self, area: dict) -> bool:
         """Update a given area."""
-        response = await self._client_session.get(
-            url=self._build_request_url(
+        await self._fetch_box(
+            self._build_bounding_box(
                 lat=area[PROP_AREA_LAT],
                 long=area[PROP_AREA_LONG],
                 radius=area[PROP_AREA_RADIUS]
             )
         )
-        if response is None:
-            return False
-        if not response.ok:
-            _LOGGER.error("Error communicating with ANWB onderweg API.")
-            return False
-        await self.parse_response(await response.json())
         return True
+
+    async def _fetch_box(self, box: tuple[float, float, float, float], depth: int = 0):
+        """Fetch stations in a bounding box, splitting it if the API reports too many results."""
+        min_lat, min_lon, max_lat, max_lon = box
+        url = f"{ANWB_API_BASE}&bounding-box-filter={min_lat}%2C{min_lon}%2C{max_lat}%2C{max_lon}"
+        async with self._client_session.get(url=url) as response:
+            if not response.ok:
+                raise UpdateFailedError(
+                    status=response.status,
+                    response=await response.text(),
+                    headers=response.headers,
+                    service=self.provider_name
+                )
+            data = await response.json()
+            status = response.status
+            headers = response.headers
+
+        error = data.get("error")
+        if error is None:
+            await self.parse_response(data)
+            return
+        if error.get("code") == "limit_exceeded" and depth < ANWB_MAX_SPLIT_DEPTH:
+            _LOGGER.debug("ANWB limit exceeded for box %s, splitting (depth %s)", box, depth + 1)
+            mid_lat = (min_lat + max_lat) / 2
+            mid_lon = (min_lon + max_lon) / 2
+            for sub_box in (
+                (min_lat, min_lon, mid_lat, mid_lon),
+                (min_lat, mid_lon, mid_lat, max_lon),
+                (mid_lat, min_lon, max_lat, mid_lon),
+                (mid_lat, mid_lon, max_lat, max_lon),
+            ):
+                await self._fetch_box(sub_box, depth + 1)
+            return
+        raise UpdateFailedError(
+            status=status,
+            response=str(error),
+            headers=headers,
+            service=self.provider_name
+        )
 
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within the bounding-box-filter"""
@@ -86,12 +118,11 @@ class ANWBOnderwegDataSource(Source):
     async def parse_response(self, response: dict):
         """Parse response data."""
         i = 0
-        if response['value']:
-            for station in response['value']:
-                await self.parse_fuel_station(station)
-                i += 1
-                if i % 100 == 1:
-                    _LOGGER.debug("%s stations loaded", i)
+        for station in response.get("value") or []:
+            await self.parse_fuel_station(station)
+            i += 1
+            if i % 100 == 1:
+                _LOGGER.debug("%s stations loaded", i)
         return list(self.location_cache.values())
 
     async def parse_fuel_station(self, data: dict):

@@ -185,6 +185,7 @@ class DirectLeaseTankServiceParser(Source):
         super().__init__(configured_areas, update_interval, client_session, configuration)
 
     async def get_site(self, site_id) -> FuelLocation:
+        self.location_cache[site_id]._client_session = self._client_session
         await self.location_cache[site_id].dynamic_build_fuels()
         return self.location_cache[site_id]
 
@@ -285,6 +286,7 @@ class DirectLeaseTankServiceParser(Source):
                     site.lat, site.long)) or (
                     len(site.available_fuels)>0
                 )):
+                site._client_session = self._client_session
                 await site.dynamic_build_fuels()
 
         return list(self.location_cache.values())
