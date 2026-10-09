@@ -1,4 +1,5 @@
 aiohttp>=3.12.14
+curl_cffi>=0.7
 geopy==2.4.1
 xmltodict
 voluptuous

@@ -6,6 +6,8 @@ import re
 
 from datetime import datetime
 
+from curl_cffi.requests import AsyncSession, RequestsError
+
 from pyfuelprices.const import (
     PROP_AREA_LAT,
     PROP_AREA_LONG,
@@ -13,7 +15,6 @@ from pyfuelprices.const import (
     PROP_FUEL_LOCATION_SOURCE,
     PROP_FUEL_LOCATION_PREVENT_CACHE_CLEANUP,
     PROP_FUEL_LOCATION_SOURCE_ID,
-    DESKTOP_USER_AGENT
 )
 from pyfuelprices.helpers import geocoder, geopyexc
 from pyfuelprices.fuel_locations import Fuel, FuelLocation
@@ -31,10 +32,6 @@ class ComparisSource(Source):
 
     country_code = "CH"
 
-    _headers = {
-        "User-Agent": DESKTOP_USER_AGENT,
-        "Content-Length":"0"
-    }
     provider_name = "comparis"
     location_cache: dict[str, FuelLocation] = {}
     # location_tree = None
@@ -45,27 +42,28 @@ class ComparisSource(Source):
         url = CONST_COMPARIS_PAGE
         _LOGGER.debug("Sending request to Comparis: %s",
                       url)
-        async with self._client_session.get(
-            url,
-            headers=self._headers) as response:
-            if response.status == 200:
-                await response.text()
-                _LOGGER.debug(response.content)
-                pattern = r'<script id="' + CONST_COMPARIS_DATA_ID + r'".*?>(.*?)</script>'
-                html_content = await response.text()
-                script_content = re.search(pattern, html_content, re.DOTALL)
-                if script_content:
-                    extracted_content = script_content.group(1).strip()
-                    _LOGGER.debug("Content within script tag with id='__NEXT_DATA__':")
-                    return extracted_content
-                else:
-                    _LOGGER.error(
-                        "Script tag with id='__NEXT_DATA__' not found in the HTML content."
-                    )
-            _LOGGER.error("Error sending request to %s: %s",
-                            url,
-                            response)
-            return "{}"
+        # comparis is protected by DataDome, which rejects aiohttp based on its
+        # TLS fingerprint, so a browser-impersonating client is required here.
+        async with AsyncSession(impersonate="chrome") as session:
+            try:
+                response = await session.get(url, timeout=30)
+            except RequestsError as err:
+                _LOGGER.error("Error sending request to %s: %s", url, err)
+                return "{}"
+        if response.status_code == 200:
+            pattern = r'<script id="' + CONST_COMPARIS_DATA_ID + r'".*?>(.*?)</script>'
+            script_content = re.search(pattern, response.text, re.DOTALL)
+            if script_content:
+                _LOGGER.debug("Content within script tag with id='__NEXT_DATA__':")
+                return script_content.group(1).strip()
+            _LOGGER.error(
+                "Script tag with id='__NEXT_DATA__' not found in the HTML content."
+            )
+        _LOGGER.error("Error sending request to %s: %s %s",
+                        url,
+                        response.status_code,
+                        dict(response.headers))
+        return "{}"
 
     async def update_area(self, area) -> bool:
         """Update a given area."""
