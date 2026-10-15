@@ -29,6 +29,9 @@ class MiseSource(Source):
     _headers = {"User-Agent": DESKTOP_USER_AGENT, "Content-Type": "application/json"}
     provider_name = "mise"
     update_interval = timedelta(days=1)
+    # Tracks raw site IDs whose detail has already been fetched, so the
+    # rate-limited detail endpoint is hit at most once per location.
+    _enriched_ids: set[str] = set()
 
     async def _send_zone_request(self, lat, lng, radius):
         """Send a zone search request to the API for a given point and radius."""
@@ -50,18 +53,25 @@ class MiseSource(Source):
             _LOGGER.error("Error sending request to %s: %s", url, response)
 
     async def get_site(self, site_id) -> FuelLocation:
-        """Return an individual fuel location, refreshing it from the detail endpoint."""
+        """Return an individual fuel location, enriching it from the detail endpoint.
+
+        The detail endpoint is aggressively rate-limited, so it is fetched at most
+        once per location (tracked in ``_enriched_ids``); afterwards the cached
+        location (already populated with prices by the zone search) is returned.
+        """
         raw_id = str(site_id)
         if raw_id.startswith(f"{self.provider_name}_"):
             raw_id = raw_id[len(self.provider_name) + 1 :]
         cached = self.location_cache.get(f"{self.provider_name}_{raw_id}")
         if cached is None:
             raise ValueError(f"Site {site_id} is not available in the cache.")
-        detail = await self._send_detail_request(raw_id)
-        if detail is not None:
-            refreshed = self._parse_detail(detail, cached)
-            await cached.update(refreshed)
-            cached.props.update(refreshed.props)
+        if raw_id not in self._enriched_ids:
+            self._enriched_ids.add(raw_id)
+            detail = await self._send_detail_request(raw_id)
+            if detail is not None:
+                refreshed = self._parse_detail(detail, cached)
+                await cached.update(refreshed)
+                cached.props.update(refreshed.props)
         return cached
 
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
