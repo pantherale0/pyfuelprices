@@ -1,5 +1,6 @@
 """Italy MISE Osservaprezzi Carburanti data source."""
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -29,9 +30,16 @@ class MiseSource(Source):
     _headers = {"User-Agent": DESKTOP_USER_AGENT, "Content-Type": "application/json"}
     provider_name = "mise"
     update_interval = timedelta(days=1)
-    # Tracks raw site IDs whose detail has already been fetched, so the
-    # rate-limited detail endpoint is hit at most once per location.
-    _enriched_ids: set[str] = set()
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        # Per-instance: tracks raw site IDs whose detail has already been
+        # fetched, so the rate-limited detail endpoint is hit at most once
+        # per location per instance.
+        self._enriched_ids: set[str] = set()
+        # In-flight detail requests, keyed by raw site ID, so concurrent
+        # callers share a single request instead of firing duplicates.
+        self._enrichment_tasks: dict[str, asyncio.Task] = {}
 
     async def _send_zone_request(self, lat, lng, radius):
         """Send a zone search request to the API for a given point and radius."""
@@ -56,8 +64,9 @@ class MiseSource(Source):
         """Return an individual fuel location, enriching it from the detail endpoint.
 
         The detail endpoint is aggressively rate-limited, so it is fetched at most
-        once per location (tracked in ``_enriched_ids``); afterwards the cached
-        location (already populated with prices by the zone search) is returned.
+        once per location: successful enrichments are tracked in ``_enriched_ids``
+        and concurrent callers share a single in-flight task. A failed request is
+        not marked, so it can be retried on a later call.
         """
         raw_id = str(site_id)
         if raw_id.startswith(f"{self.provider_name}_"):
@@ -66,13 +75,31 @@ class MiseSource(Source):
         if cached is None:
             raise ValueError(f"Site {site_id} is not available in the cache.")
         if raw_id not in self._enriched_ids:
-            self._enriched_ids.add(raw_id)
+            task = self._enrichment_tasks.get(raw_id)
+            if task is None:
+                task = asyncio.create_task(self._enrich(cached, raw_id))
+                self._enrichment_tasks[raw_id] = task
+            await task
+        return cached
+
+    async def _enrich(self, cached: FuelLocation, raw_id: str) -> None:
+        """Fetch the detail endpoint and merge it into the cached location.
+
+        The location is only marked as enriched after a successful fetch, so a
+        failed request (e.g. a 429, timeout, or parsing error) can be retried
+        on a later call.
+        """
+        try:
             detail = await self._send_detail_request(raw_id)
             if detail is not None:
                 refreshed = self._parse_detail(detail, cached)
                 await cached.update(refreshed)
                 cached.props.update(refreshed.props)
-        return cached
+                self._enriched_ids.add(raw_id)
+        except Exception:
+            _LOGGER.warning("Failed to enrich MISE location %s; will retry later.", raw_id)
+        finally:
+            self._enrichment_tasks.pop(raw_id, None)
 
     async def search_sites(self, coordinates, radius: float) -> list[dict]:
         """Return all available sites within a given radius."""
@@ -161,20 +188,32 @@ class MiseSource(Source):
 
     async def parse_response(self, response) -> list[FuelLocation]:
         for station_raw in response:
+            cached = self.location_cache.get(f"{self.provider_name}_{station_raw['id']}")
+            # The zone response may omit fields that only the detail endpoint
+            # provides (e.g. address); keep the enriched value in that case.
+            if cached is not None and not station_raw.get("address"):
+                station_raw["address"] = cached.address
             station = self._parse_raw(station_raw)
-            if station.id not in self.location_cache:
+            if cached is None:
                 self.location_cache[station.id] = station
             else:
-                await self.location_cache[station.id].update(station)
+                await cached.update(station)
         return list(self.location_cache.values())
 
     def parse_fuels(self, fuels: list[dict]) -> list[Fuel]:
-        """Parse fuel data from MISE."""
+        """Parse fuel data from MISE.
+
+        Self-service and attended prices for the same fuel are given distinct
+        fuel types, so both survive serialization and updates.
+        """
         fuels_parsed = []
         for fuel in fuels:
+            fuel_type = str(fuel["name"])
+            if fuel.get("isSelf"):
+                fuel_type = f"{fuel_type} (self-service)"
             fuels_parsed.append(
                 Fuel(
-                    fuel_type=str(fuel["name"]),
+                    fuel_type=fuel_type,
                     cost=fuel["price"],
                     props={"self_service": bool(fuel.get("isSelf", False)), "validity_date": fuel.get("validityDate")},
                 )
