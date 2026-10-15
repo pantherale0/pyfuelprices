@@ -39,6 +39,7 @@ Sources used to provide data for this module include:
 - DE: TankerKoenig (https://tankerkoenig.de/)
 - GB: Fuel Finder (https://www.gov.uk/guidance/access-the-latest-fuel-prices-and-forecourt-data-via-api-or-email) - requires your own API client ID and secret and a UK IP address, PetrolPrices (https://www.petrolprices.com/), Costco, PodPoint Public Charges
 - GR: FuelGR (https://fuelgr.gr/)
+- IT: Osservaprezzi Carburanti (https://carburanti.mise.gov.it/OssPrezziSearch/)
 - NL: DirectLease TankService (https://directlease.nl/tankservice/)
 - NZ: PetrolSpy (https://petrolspy.com.au) - Use Australia fuel source above to access.
 - RO: Peco-Online (https://www.peco-online.ro/)
