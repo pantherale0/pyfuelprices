@@ -95,6 +95,11 @@ async def main():
                 PROP_AREA_LONG: 14.510424,
                 PROP_AREA_RADIUS: 25.0 # Slovenia
             },
+            {
+                PROP_AREA_LAT: 41.884159,
+                PROP_AREA_LONG: 12.489388,
+                PROP_AREA_RADIUS: 15.0  # Italy
+            },
         ],
         "country_code": ""
     }
@@ -185,6 +190,19 @@ async def main():
             radius=20.0,
             fuel_type="DSL"
         )) #AUS (FuelSnoop)
+
+        _LOGGER.info("Italy test...")
+        for loc in await data.find_fuel_locations_from_point(
+            coordinates=(41.890220, 12.492367),
+            radius=5.0
+        ):
+            _LOGGER.info("Found location: %s", loc)
+
+        _LOGGER.info("Fuels test (Italy): %s", await data.find_fuel_from_point(
+            coordinates=(41.890220, 12.492367),
+            radius=5.0,
+            fuel_type="Gasolio"
+        )) #Italy (MISE)
 
         await asyncio.sleep(15)
 
