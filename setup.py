@@ -17,7 +17,7 @@ REQUIREMENTS = [
     # 'numpy == 1.26.0',
     # 'scikit-learn == 1.3.0',
     'curl_cffi >= 0.7',
-    'geopy == 2.4.1',
+    'geopy == 2.5.0',
     'voluptuous >= 0.10'
 ]
 
